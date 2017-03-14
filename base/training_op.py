@@ -13,8 +13,6 @@ import datetime
 import logging
 log = logging.getLogger()
 
-
-
 class OrgAllotToChanCancel:
     def __init__(self, *args, **kwargs):
         self.dbret = kwargs["dbret"]
@@ -240,7 +238,7 @@ class TrainingOP:
                 self.db.rollback()
                 self.respcd = response.UAURET.BALANCEERR 
                 return UYU_OP_ERR
-            sql = "update stores set remain_times=remain_times+%d where id=%d" % (training_times, store_id)
+            sql = "update stores set remain_times=remain_times+%d where id=%d and channel_id=%d" % (training_times, store_id, chan_id)
             ret = self.db.execute(sql)
             if ret == 0:
                 self.db.rollback()
