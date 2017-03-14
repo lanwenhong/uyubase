@@ -381,6 +381,20 @@ class UUser:
             log.warn(traceback.format_exc())
             raise
 
+    @with_database('uyu_core')
+    def allocate_device(self, channel_id, store_id, serial_number):
+        try:
+            where = {'id': serial_number}
+            values = {'channel_id': channel_id}
+            if store_id:
+                values.update({'store_id': store_id})
+            ret = self.db.update(table='device', values=values, where=where)
+            log.debug('allocate_device values:%s, where: %s, ret: %s', values, where, ret)
+        except Exception as e:
+            log.warn(e)
+            log.warn(traceback.format_exc())
+            raise
+
     def call(self, func_name, *args, **kwargs):
         try:
             func = getattr(self, func_name)
