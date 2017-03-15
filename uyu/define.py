@@ -17,6 +17,7 @@ UYU_ORDER_STATUS_MAP = {
 }
 
 #基础用户角色
+UYU_USER_ROLE_BASE     = 1
 #渠道用户
 UYU_USER_ROLE_CHAN     = 2
 #门店用户
@@ -27,6 +28,8 @@ UYU_USER_ROLE_HOSPITAL = 4
 UYU_USER_ROLE_EYESIGHT = 5
 #公司超级管理员
 UYU_USER_ROLE_SUPER    = 6
+#消费者
+UYU_USER_ROLE_COMSUMER = 7
 
 #用户状态
 #正常
