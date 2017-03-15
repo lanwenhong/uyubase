@@ -95,6 +95,14 @@ UYU_DEVICE_MAP = {
     UYU_DEVICE_CLOSE : '关闭',
 }
 
+#训练使用状态
+#已使用
+UYU_TRAIN_USE_USED = 0
+
+UYU_TRAIN_USE_MAP = {
+    UYU_TRAIN_USE_USED : '已使用',
+}
+
 #系统角色
 UYU_SYS_ROLE_OP = 0
 UYU_SYS_ROLE_CHAN = 1
