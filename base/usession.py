@@ -50,6 +50,7 @@ class SUser:
         self.userid = int(userid)
         self.udata = None
         self.pdata = None
+        self.sdata = None
         self.se = session
 
     #检查SESSION对应的USERID是否有权限获取用户数据
@@ -96,6 +97,15 @@ class SUser:
             return
         sql = "select * from profile where userid=%d" % self.userid
         self.pdata= self.db.get(sql)
+
+    def load_store(self):
+        if not self.udata or not self.pdata:
+            return
+        user_type == self.udata.get("user_type", -1)
+        if user_type != response.UYU_USER_ROLE_STORE:
+            return
+        sql = "select * from stores where userid=%d" % self.userid
+        self.sdata = self.db.get(sql)
 
 
 def uyu_check_session(redis_pool, cookie_conf, sys_role):
