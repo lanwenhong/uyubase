@@ -94,7 +94,7 @@ class UUser:
         sql_value["state"] = define.UYU_USER_STATE_OK
         self.db.insert("auth_user", sql_value)
         self.userid = self.db.last_insert_id()
-    
+
 
     @with_database('uyu_core')
     def load_user_by_mobile(self, mobile):
@@ -357,6 +357,43 @@ class UUser:
         except:
             log.warn(traceback.format_exc())
             return UAURET.VCODEERR
+
+    @with_database('uyu_core')
+    def create_device(self, device_name, hd_version, blooth_tag, scm_tag, status, channel_id, store_id, training_nums, op):
+        try:
+            values = {}
+            values['device_name'] = device_name;
+            values['hd_version'] = hd_version;
+            values['blooth_tag'] = blooth_tag;
+            values['scm_tag'] = scm_tag;
+            values['status'] = status;
+            values['channel_id'] = channel_id;
+            values['store_id'] = store_id;
+            values['training_nums'] = training_nums;
+            values['op'] = op;
+            now = datetime.datetime.now()
+            values['ctime'] = now
+            values['utime'] = now
+            ret = self.db.insert(table='device', values=values)
+            log.debug('create device value:%s, ret:%s', values, ret)
+        except Exception as e:
+            log.warn(e)
+            log.warn(traceback.format_exc())
+            raise
+
+    @with_database('uyu_core')
+    def allocate_device(self, channel_id, store_id, serial_number):
+        try:
+            where = {'id': serial_number}
+            values = {'channel_id': channel_id}
+            if store_id:
+                values.update({'store_id': store_id})
+            ret = self.db.update(table='device', values=values, where=where)
+            log.debug('allocate_device values:%s, where: %s, ret: %s', values, where, ret)
+        except Exception as e:
+            log.warn(e)
+            log.warn(traceback.format_exc())
+            raise
 
     def call(self, func_name, *args, **kwargs):
         try:
