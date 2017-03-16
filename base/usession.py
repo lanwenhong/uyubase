@@ -70,13 +70,15 @@ class SUser:
         if not plist:
             return False
 
-        log.debug("get plist: %s", plist)
+        log.debug("user_type: %d get plist: %s", user_type, plist)
         if user_type not in plist:
             return False
-
+        
+        log.debug("self.userd: %d s_userid: %d", self.userid, v.get("userid"))
         if self.userid != v.get("userid"):
             return False
-
+        
+        log.debug("session check ok")
         self.sauth = True
         return True
 
@@ -133,15 +135,18 @@ def uyu_check_session(redis_pool, cookie_conf, sys_role):
 def uyu_set_cookie(redis_pool, cookie_conf, user_role):
     def f(func):
         def _(self, *args, **kwargs):
-            x = func(self, *args, **kwargs)
-            #创建SESSION
-            self.session = USession(redis_pool, cookie_conf)
-            self.session.gen_skey()
+            try:
+                x = func(self, *args, **kwargs)
+                #创建SESSION
+                self.session = USession(redis_pool, cookie_conf)
+                self.session.gen_skey()
 
-            v = json.loads(x)
-            if v["respcd"] == UAURET.OK:
-                self.session.set_session(v["data"], user_role)
-                self.set_cookie("sessionid", self.session.sk, **cookie_conf)
+                v = json.loads(x)
+                if v["respcd"] == UAURET.OK:
+                    self.session.set_session(v["data"], user_role)
+                    self.set_cookie("sessionid", self.session.sk, **cookie_conf)
+            except:
+                log.warn(traceback.format_exc())
             return x
         return _
     return f
