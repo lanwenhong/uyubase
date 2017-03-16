@@ -51,6 +51,7 @@ class SUser:
         self.udata = None
         self.pdata = None
         self.sdata = None
+        self.cdata = None
         self.se = session
 
     #检查SESSION对应的USERID是否有权限获取用户数据
@@ -73,11 +74,11 @@ class SUser:
         log.debug("user_type: %d get plist: %s", user_type, plist)
         if user_type not in plist:
             return False
-        
+
         log.debug("self.userd: %d s_userid: %d", self.userid, v.get("userid"))
         if self.userid != v.get("userid"):
             return False
-        
+
         log.debug("session check ok")
         self.sauth = True
         return True
@@ -111,6 +112,18 @@ class SUser:
             return
         sql = "select * from stores where userid=%d" % self.userid
         self.sdata = self.db.get(sql)
+
+    @dbpool.with_database('uyu_core')
+    def load_channel(self):
+        if not self.udata or not self.pdata:
+            return
+        user_type = self.udata.get('user_type', -1)
+
+        if user_type != define.UYU_USER_ROLE_CHAN:
+            return
+
+        ret = self.db.select_one(table='channel', where={'userid': self.userid})
+        self.cdata = ret
 
 
 def uyu_check_session(redis_pool, cookie_conf, sys_role):
@@ -176,14 +189,20 @@ def uyu_check_session_for_page(redis_pool, cookie_conf, sys_role):
                     flag = False
 
                 if not flag:
-                    self.redirect('/channel_op/v1/page/login.html')
+                    if sys_role == define.UYU_SYS_ROLE_OP:
+                        self.redirect('/channel_op/v1/page/login.html')
+                    else:
+                        self.redirect('/channel/v1/page/login.html')
 
                 ret = func(self, *args, **kwargs)
                 return ret
             except Exception as e:
                 log.warn(e)
                 log.debug('tool except redirect')
-                self.redirect('/channel_op/v1/page/login.html')
+                if sys_role == define.UYU_SYS_ROLE_OP:
+                    self.redirect('/channel_op/v1/page/login.html')
+                else:
+                    self.redirect('/channel/v1/page/login.html')
         return _
     return f
 
