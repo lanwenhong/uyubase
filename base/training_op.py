@@ -13,13 +13,54 @@ import datetime
 import logging
 log = logging.getLogger()
 
+class StoreToConsumerCancel:
+    def __init__(self, *args, **kwargs):
+        self.dbret = kwargs["dbret"]
+        self.store_id = self.dbret.get("store_id", None)
+        self.consumer_id = self.dbret.get("consumer_id", None)
+        self.cancel_times = self.dbret.get("training_times")
+    
+    @with_database('uyu_core')
+    def do_cancel(self):
+        try:
+            self.db.start()
+            uptime = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            sql = "update training_operator_record set status=%d, uptime_time='%s' where orderno='%s' and status=%d" % (define.UYU_ORDER_STATUS_CANCEL, 
+                    uptime, 
+                    self.dbret["orderno"],
+                    define.UYU_ORDER_STATUS_SUCC
+                    )
+            ret = self.db.execute(sql)
+            if ret == 0:
+                self.db.rollback()
+                log.warn("update order %s fail", self.dbret["orderno"])
+                return UYU_OP_ERR               
+            sql = "update stores set remain_times=remain_times+%d where id=%d" % (self.cancel_times, self.store_id)
+            ret = self.db.execute(sql)
+            if ret == 0:
+                self.db.rollback()
+                log.warn("update sotres %d fail", self.store_id)
+                return UYU_OP_ERR       
+            sql = "update consumer set remain_times=remain_times-%d where userid=%d" % (self.cancel_times, self.consumer_id)
+            ret = self.db.execute(sql)
+            if ret == 0:
+                log.warn("update consumer %d fail", self.consumer_id)
+                self.db.rollback()
+                return UYU_OP_ERR       
+            self.db.commit()
+            return UYU_OP_OK
+        except:
+            self.db.rollback()
+            log.warn(traceback.format_exc())
+            return UYU_OP_ERR
+
 class OrgAllotToChanCancel:
     def __init__(self, *args, **kwargs):
         self.dbret = kwargs["dbret"]
         self.store_id = self.dbret.get("store_id", None)
-        self.channel_id = self.dbret.get("channel_id", None)
+        self.consumer_id = self.dbret.get("consumer_id", None)
         self.cancel_times = self.dbret.get("training_times")
-    
+
     @with_database('uyu_core')
     def do_cancel(self):
         try:
@@ -42,6 +83,7 @@ class OrgAllotToChanCancel:
             self.db.commit()
             return UYU_OP_OK
         except:
+            self.db.rollback()
             log.warn(traceback.format_exc())
             return UYU_OP_ERR
 
@@ -80,6 +122,7 @@ class ChanAllotStoreCancel:
             self.db.commit()
             return UYU_OP_OK
         except:
+            self.db.rollback()
             log.warn(traceback.format_exc())
             return UYU_OP_ERR
 
@@ -103,9 +146,9 @@ class TrainingOP:
         self.cancel_handler = {
             define.BUSICD_ORG_ALLOT_TO_CHAN: OrgAllotToChanCancel,
             define.BUSICD_CHAN_ALLOT_TO_STORE: ChanAllotStoreCancel,
+            define.BUSICD_CHAN_ALLOT_TO_COSUMER: StoreToConsumerCancel,
         }
         
-
     def create_orderno(self):
         with dbpool.get_connection('uyu_core') as conn:
             myid = new_id64(conn=conn)
@@ -123,10 +166,12 @@ class TrainingOP:
         
     def order_cancel(self):
         can_cancel, dbret = self.__check_cancel_permission()
-        if can_cancel and handler_class:
+        if can_cancel and dbret:
             busicd = dbret.get("busicd", "")
             log.debug("dbret: %s busicd: %s", dbret, busicd)
             handler_class = self.cancel_handler.get(busicd)
+            if not handler_class:
+                return UYU_OP_ERR
             obj_handler = handler_class(dbret=dbret)
             ret = obj_handler.do_cancel()
             return ret
@@ -203,7 +248,7 @@ class TrainingOP:
 
     #门店分配训练点数给消费者
     @with_database('uyu_core')
-    def create_store_allot_to_comsumer_order(self):
+    def create_store_allot_to_consumer_order(self):
         store_id = self.cdata["store_id"]  
         userid = self.cdata["consumer_id"]
         
@@ -222,7 +267,7 @@ class TrainingOP:
                 self.db.rollback()
                 self.respcd = response.UAURET.BALANCEERR 
                 return UYU_OP_ERR
-            sql = "update comsumer set remain_times=remain_times+%d where userid=%d" % (training_times, userid)
+            sql = "update consumer set remain_times=remain_times+%d where userid=%d" % (training_times, userid)
             ret = self.db.execute(sql)
             if ret == 0:
                 self.db.rollback()
