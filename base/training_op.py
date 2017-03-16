@@ -123,10 +123,10 @@ class TrainingOP:
         
     def order_cancel(self):
         can_cancel, dbret = self.__check_cancel_permission()
-        busicd = dbret.get("busicd", "")
-        handler_class = self.cancel_handler.get(busicd)
-        log.debug("dbret: %s busicd: %s", dbret, busicd)
         if can_cancel and handler_class:
+            busicd = dbret.get("busicd", "")
+            log.debug("dbret: %s busicd: %s", dbret, busicd)
+            handler_class = self.cancel_handler.get(busicd)
             obj_handler = handler_class(dbret=dbret)
             ret = obj_handler.do_cancel()
             return ret
