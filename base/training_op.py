@@ -57,8 +57,8 @@ class StoreToConsumerCancel:
 class OrgAllotToChanCancel:
     def __init__(self, *args, **kwargs):
         self.dbret = kwargs["dbret"]
-        self.store_id = self.dbret.get("store_id", None)
-        self.consumer_id = self.dbret.get("consumer_id", None)
+        #self.store_id = self.dbret.get("store_id", None)
+        self.channel_id = self.dbret.get("channel_id", None)
         self.cancel_times = self.dbret.get("training_times")
 
     @with_database('uyu_core')
