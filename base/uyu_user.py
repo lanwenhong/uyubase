@@ -252,19 +252,30 @@ class UUser:
     @with_database("uyu_core")
     def store_bind_eyesight(self, userid, store_id, chan_id):
         try:
-            sql_value = {"eyesight_id": userid, "store_id": store_id, "channel_id": chan_id, 'is_valid': define.UYU_STORE_EYESIGHT_BIND}
-            sql_value['ctime'] = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            self.db.insert("store_eyesight_bind", sql_value)
+
+            where = {"eyesight_id": userid, "store_id": store_id, "channel_id": chan_id}
+            ret = self.db.select_one(table='store_eyesight_bind', fields='*', where=where)
+            if not ret:
+                sql_value = {"eyesight_id": userid, "store_id": store_id, "channel_id": chan_id, 'is_valid': define.UYU_STORE_EYESIGHT_BIND}
+                sql_value['ctime'] = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                self.db.insert("store_eyesight_bind", sql_value)
+                return True, UAURET.OK
+            else:
+                is_valid = ret.get('is_valid')
+                if is_valid == define.UYU_STORE_EYESIGHT_BIND:
+                    return False, UAURET.DATAEXIST
+                else:
+                    self.db.update(
+                        table='store_eyesight_bind',
+                        values={'is_valid': define.UYU_STORE_EYESIGHT_BIND},
+                        where={'eyesight_id': userid, 'store_id': store_id, 'channel_id': chan_id}
+                    )
+                    return True, UAURET.OK
+
         except Exception as e:
             log.warn(e)
             log.warn(traceback.format_exc())
-            if 'Duplicate entry' in e[1]:
-                self.db.update(table='store_eyesight_bind',
-                               values={'is_valid': define.UYU_STORE_EYESIGHT_BIND},
-                               where={'eyesight_id': userid, 'store_id': store_id, 'channel_id': chan_id}
-                )
-            else:
-                raise
+            raise
 
 
     #门店解绑视光师
