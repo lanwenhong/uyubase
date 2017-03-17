@@ -359,7 +359,7 @@ class UUser:
             return UAURET.VCODEERR
 
     @with_database('uyu_core')
-    def create_device(self, device_name, hd_version, blooth_tag, scm_tag, status, channel_id, store_id, training_nums, op):
+    def create_device(self, device_name, hd_version, blooth_tag, scm_tag, status, channel_id, store_id=None, training_nums=None, op=None):
         try:
             values = {}
             values['device_name'] = device_name;
