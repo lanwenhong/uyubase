@@ -19,14 +19,14 @@ class StoreToConsumerCancel:
         self.store_id = self.dbret.get("store_id", None)
         self.consumer_id = self.dbret.get("consumer_id", None)
         self.cancel_times = self.dbret.get("training_times")
-    
+
     @with_database('uyu_core')
     def do_cancel(self):
         try:
             self.db.start()
             uptime = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            sql = "update training_operator_record set status=%d, uptime_time='%s' where orderno='%s' and status=%d" % (define.UYU_ORDER_STATUS_CANCEL, 
-                    uptime, 
+            sql = "update training_operator_record set status=%d, uptime_time='%s' where orderno='%s' and status=%d" % (define.UYU_ORDER_STATUS_CANCEL,
+                    uptime,
                     self.dbret["orderno"],
                     define.UYU_ORDER_STATUS_SUCC
                     )
@@ -34,19 +34,19 @@ class StoreToConsumerCancel:
             if ret == 0:
                 self.db.rollback()
                 log.warn("update order %s fail", self.dbret["orderno"])
-                return UYU_OP_ERR               
+                return UYU_OP_ERR
             sql = "update stores set remain_times=remain_times+%d where id=%d" % (self.cancel_times, self.store_id)
             ret = self.db.execute(sql)
             if ret == 0:
                 self.db.rollback()
                 log.warn("update sotres %d fail", self.store_id)
-                return UYU_OP_ERR       
+                return UYU_OP_ERR
             sql = "update consumer set remain_times=remain_times-%d where userid=%d" % (self.cancel_times, self.consumer_id)
             ret = self.db.execute(sql)
             if ret == 0:
                 log.warn("update consumer %d fail", self.consumer_id)
                 self.db.rollback()
-                return UYU_OP_ERR       
+                return UYU_OP_ERR
             self.db.commit()
             return UYU_OP_OK
         except:
@@ -66,20 +66,20 @@ class OrgAllotToChanCancel:
         try:
             self.db.start()
             uptime = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            sql = "update training_operator_record set status=%d, uptime_time='%s'  where orderno='%s' and status=%d" % (define.UYU_ORDER_STATUS_CANCEL, 
-                uptime, 
+            sql = "update training_operator_record set status=%d, uptime_time='%s'  where orderno='%s' and status=%d" % (define.UYU_ORDER_STATUS_CANCEL,
+                uptime,
                 self.dbret["orderno"],
                 define.UYU_ORDER_STATUS_SUCC
                 )
             ret = self.db.execute(sql)
             if ret == 0:
                 self.db.rollback()
-                return UYU_OP_ERR               
+                return UYU_OP_ERR
             sql = "update channel set remain_times=remain_times-%d where id=%d" % (self.cancel_times, self.channel_id)
             ret = self.db.execute(sql)
             if ret == 0:
                 self.db.rollback()
-                return UYU_OP_ERR      
+                return UYU_OP_ERR
             self.db.commit()
             return UYU_OP_OK
         except:
@@ -93,14 +93,14 @@ class ChanAllotStoreCancel:
         self.store_id = self.dbret.get("store_id", None)
         self.channel_id = self.dbret.get("channel_id", None)
         self.cancel_times = self.dbret.get("training_times")
-    
+
     @with_database('uyu_core')
     def do_cancel(self):
         try:
             self.db.start()
             uptime = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            sql = "update training_operator_record set status=%d, uptime_time='%s' where orderno='%s' and status=%d" % (define.UYU_ORDER_STATUS_CANCEL, 
-                uptime, 
+            sql = "update training_operator_record set status=%d, uptime_time='%s' where orderno='%s' and status=%d" % (define.UYU_ORDER_STATUS_CANCEL,
+                uptime,
                 self.dbret["orderno"],
                 define.UYU_ORDER_STATUS_SUCC
                 )
@@ -113,12 +113,12 @@ class ChanAllotStoreCancel:
             ret = self.db.execute(sql)
             if ret == 0:
                 self.db.rollback()
-                return UYU_OP_ERR      
+                return UYU_OP_ERR
             sql = "update stores set remain_times=remain_times-%d where id=%d" % (self.cancel_times, self.store_id)
             ret = self.db.execute(sql)
             if ret == 0:
                 self.db.rollback()
-                return UYU_OP_ERR      
+                return UYU_OP_ERR
             self.db.commit()
             return UYU_OP_OK
         except:
@@ -138,7 +138,7 @@ class TrainingOP:
         )
         self.db_data = {}
         self.cdata = cdata
-        self.suser = suser 
+        self.suser = suser
         self.respcd = None
 
         self.order_no = order_no
@@ -148,13 +148,13 @@ class TrainingOP:
             define.BUSICD_CHAN_ALLOT_TO_STORE: ChanAllotStoreCancel,
             define.BUSICD_CHAN_ALLOT_TO_COSUMER: StoreToConsumerCancel,
         }
-        
+
     def create_orderno(self):
         with dbpool.get_connection('uyu_core') as conn:
             myid = new_id64(conn=conn)
             return datetime.datetime.now().strftime("%Y%m%d%H%M%S") + str(myid)
 
-    @with_database('uyu_core')  
+    @with_database('uyu_core')
     def __check_cancel_permission(self):
         dbret = self.db.select_one("training_operator_record", {"orderno": self.order_no})
         ctime = dbret["create_time"]
@@ -163,7 +163,7 @@ class TrainingOP:
         if db_day != n_day:
             return False, None
         return True, dbret
-        
+
     def order_cancel(self):
         can_cancel, dbret = self.__check_cancel_permission()
         if can_cancel and dbret:
@@ -193,6 +193,39 @@ class TrainingOP:
 
         return sql_value
 
+
+    @with_database('uyu_core')
+    def __gen_buyer_seller(self, busicd, sql_value, channel_id=None, store_id=None, consumer_id=None):
+        if busicd == define.BUSICD_ORG_ALLOT_TO_CHAN:
+            ch_ret = self.db.select_one(table='channel', fields='channel_name, userid', where={'id': channel_id})
+            sql_value['buyer'] = ch_ret.get('channel_name')
+            sql_value['buyer_id'] = ch_ret.get('userid')
+            sql_value['seller'] = '公司'
+            sql_value['seller_id'] = 0
+        elif busicd == BUSICD_CHAN_BUY_TRAING_TIMES:
+            ch_ret = self.db.select_one(table='channel', fields='channel_name, userid', where={'id': channel_id})
+            sql_value['buyer'] = ch_ret.get('channel_name')
+            sql_value['buyer_id'] = ch_ret.get('userid')
+            sql_value['seller'] = '公司'
+            sql_value['seller_id'] = 0
+        elif busicd == BUSICD_CHAN_ALLOT_TO_STORE:
+            ch_ret = self.db.select_one(table='channel', fields='channel_name, userid', where={'id': channel_id})
+            st_ret = self.db.select_one(table='stores', fields='store_name, userid', where={'id': store_id})
+            sql_value['buyer'] =  st_ret.get('store_name')
+            sql_value['buyer_id'] = st_ret.get('userid')
+            sql_value['seller'] =  ch_ret.get('channel_name')
+            sql_value['seller_id'] = ch_ret.get('userid')
+        elif busicd == BUSICD_CHAN_ALLOT_TO_COSUMER:
+            st_ret = self.db.select_one(table='stores', fields='store_name, userid', where={'id': store_id})
+            at_ret = self.db.select_one(table='auth_user', fields='phone_num', where={'id': consumer_id})
+            sql_value['buyer'] = at_ret.get('phone_num')
+            sql_value['buyer_id'] = consumer_id
+            sql_value['seller'] = st_ret.get('store_name')
+            sql_value['seller_id'] = st_ret.get('userid')
+        else:
+            pass
+
+
     #公司分配给渠道训练次数的订单
     @with_database('uyu_core')
     def create_org_allot_to_chan_order(self):
@@ -201,6 +234,7 @@ class TrainingOP:
         sql_value = self.__gen_vsql(UYU_ORDER_STATUS_SUCC)
         sql_value["op_type"] = define.UYU_ORDER_TYPE_ALLOT
         sql_value["op_name"] = self.suser.get("login_name", "")
+        self.__gen_buyer_seller(define.BUSICD_ORG_ALLOT_TO_CHAN, sql_value, chan_id)
 
         try:
             self.db.start()
@@ -219,16 +253,16 @@ class TrainingOP:
             self.db.rollback()
             return UYU_OP_ERR
 
-    #公司分配门店训练次数订单
+    #渠道分配门店训练次数订单
     @with_database('uyu_core')
     def create_org_allot_to_store_order(self):
         chan_id = self.cdata["channel_id"]
         store_id = self.cdata["store_id"]
         sql_value = self.__gen_vsql(UYU_ORDER_STATUS_SUCC)
-        
+
         sql_value["op_type"] = define.UYU_ORDER_TYPE_ALLOT
         sql_value["op_name"] = self.suser.get("login_name", "")
-
+        self.__gen_buyer_seller(define.BUSICD_CHAN_ALLOT_TO_STORE, sql_value, chan_id, store_id)
         try:
             self.db.start()
             self.db.insert("training_operator_record", sql_value)
@@ -249,13 +283,13 @@ class TrainingOP:
     #门店分配训练点数给消费者
     @with_database('uyu_core')
     def create_store_allot_to_consumer_order(self):
-        store_id = self.cdata["store_id"]  
+        store_id = self.cdata["store_id"]
         userid = self.cdata["consumer_id"]
-        
+
         sql_value = self.__gen_vsql(UYU_ORDER_STATUS_SUCC)
         sql_value["op_type"] = define.UYU_ORDER_TYPE_ALLOT
         sql_value["op_name"] = self.suser.get("login_name", "")
-
+        self.__gen_buyer_seller(define.BUSICD_CHAN_ALLOT_TO_COSUMER, sql_value, store_id=store_id, consumer_id=userid)
         try:
             log.debug("=====sql_value: %s", sql_value)
             self.db.start()
@@ -265,7 +299,7 @@ class TrainingOP:
             ret = self.db.execute(sql)
             if ret == 0:
                 self.db.rollback()
-                self.respcd = response.UAURET.BALANCEERR 
+                self.respcd = response.UAURET.BALANCEERR
                 return UYU_OP_ERR
             sql = "update consumer set remain_times=remain_times+%d where userid=%d" % (training_times, userid)
             ret = self.db.execute(sql)
@@ -286,16 +320,17 @@ class TrainingOP:
 
         sql_value["op_type"] = define.UYU_ORDER_TYPE_BUY
         sql_value["op_name"] = self.suser.get("login_name", "")
+        self.__gen_buyer_seller(define.BUSICD_CHAN_BUY_TRAING_TIMES, sql_value, chan_id)
 
         try:
-            self.db.insert("training_operator_record", sql_value) 
+            self.db.insert("training_operator_record", sql_value)
             return UYU_OP_OK
         except:
             log.warn(traceback.format_exc())
             return UYU_OP_ERR
 
     #渠道分配训练点数给门店
-    @with_database('uyu_core') 
+    @with_database('uyu_core')
     def create_chan_allot_to_store_order(self):
         chan_id = self.cdata["channel_id"]
         store_id = self.cdata["store_id"]
@@ -303,7 +338,7 @@ class TrainingOP:
 
         sql_value["op_type"] = define.UYU_ORDER_TYPE_ALLOT
         sql_value["op_name"] = self.suser.get("login_name", "")
-
+        self.__gen_buyer_seller(define.BUSICD_CHAN_ALLOT_TO_STORE, sql_value, chan_id, store_id)
         try:
             log.debug("=====sql_value: %s", sql_value)
             self.db.start()
@@ -313,7 +348,7 @@ class TrainingOP:
             ret = self.db.execute(sql)
             if ret == 0:
                 self.db.rollback()
-                self.respcd = response.UAURET.BALANCEERR 
+                self.respcd = response.UAURET.BALANCEERR
                 return UYU_OP_ERR
             sql = "update stores set remain_times=remain_times+%d where id=%d and channel_id=%d" % (training_times, store_id, chan_id)
             ret = self.db.execute(sql)
