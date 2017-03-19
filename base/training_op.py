@@ -134,7 +134,7 @@ class TrainingOP:
             "category", "op_type", "pay_type", "training_times",
             "training_amt", "status", "op_name", "orderno",
             "create_time", "update_time", "ch_training_amt_per",
-            "store_training_amt_per",
+            "store_training_amt_per", "remark",
         )
         self.db_data = {}
         self.cdata = cdata
