@@ -194,7 +194,6 @@ class TrainingOP:
         return sql_value
 
 
-    @with_database('uyu_core')
     def __gen_buyer_seller(self, busicd, sql_value, channel_id=None, store_id=None, consumer_id=None):
         if busicd == define.BUSICD_ORG_ALLOT_TO_CHAN:
             ch_ret = self.db.select_one(table='channel', fields='channel_name, userid', where={'id': channel_id})
@@ -202,20 +201,20 @@ class TrainingOP:
             sql_value['buyer_id'] = ch_ret.get('userid')
             sql_value['seller'] = '公司'
             sql_value['seller_id'] = 0
-        elif busicd == BUSICD_CHAN_BUY_TRAING_TIMES:
+        elif busicd == define.BUSICD_CHAN_BUY_TRAING_TIMES:
             ch_ret = self.db.select_one(table='channel', fields='channel_name, userid', where={'id': channel_id})
             sql_value['buyer'] = ch_ret.get('channel_name')
             sql_value['buyer_id'] = ch_ret.get('userid')
             sql_value['seller'] = '公司'
             sql_value['seller_id'] = 0
-        elif busicd == BUSICD_CHAN_ALLOT_TO_STORE:
+        elif busicd == define.BUSICD_CHAN_ALLOT_TO_STORE:
             ch_ret = self.db.select_one(table='channel', fields='channel_name, userid', where={'id': channel_id})
             st_ret = self.db.select_one(table='stores', fields='store_name, userid', where={'id': store_id})
             sql_value['buyer'] =  st_ret.get('store_name')
             sql_value['buyer_id'] = st_ret.get('userid')
             sql_value['seller'] =  ch_ret.get('channel_name')
             sql_value['seller_id'] = ch_ret.get('userid')
-        elif busicd == BUSICD_CHAN_ALLOT_TO_COSUMER:
+        elif busicd == define.BUSICD_CHAN_ALLOT_TO_COSUMER:
             st_ret = self.db.select_one(table='stores', fields='store_name, userid', where={'id': store_id})
             at_ret = self.db.select_one(table='auth_user', fields='phone_num', where={'id': consumer_id})
             sql_value['buyer'] = at_ret.get('phone_num')
