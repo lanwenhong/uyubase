@@ -8,7 +8,7 @@ from uyubase.base import response
 from uyubase.base.response import UAURET
 from uyubase.uyu import define
 
-import logging, datetime, time
+import logging, datetime, time, traceback
 log = logging.getLogger()
 
 
@@ -158,9 +158,10 @@ def uyu_set_cookie(redis_pool, cookie_conf, user_role):
                 if v["respcd"] == UAURET.OK:
                     self.session.set_session(v["data"], user_role)
                     self.set_cookie("sessionid", self.session.sk, **cookie_conf)
+                return x
             except:
                 log.warn(traceback.format_exc())
-            return x
+                raise
         return _
     return f
 
