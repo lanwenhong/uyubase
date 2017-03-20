@@ -8,6 +8,8 @@ from uyubase.base import response
 from uyubase.base.response import UAURET
 from uyubase.uyu import define
 
+from uyubase.base.response import success, error, UAURET
+
 import logging, datetime, time, traceback
 log = logging.getLogger()
 
@@ -161,7 +163,8 @@ def uyu_set_cookie(redis_pool, cookie_conf, user_role):
                 return x
             except:
                 log.warn(traceback.format_exc())
-                raise
+                return error(UAURET.SERVERERR)
+                #raise
         return _
     return f
 
