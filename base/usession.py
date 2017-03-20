@@ -131,19 +131,23 @@ class SUser:
 def uyu_check_session(redis_pool, cookie_conf, sys_role):
     def f(func):
         def _(self, *args, **kwargs):
-            sk = self.get_cookie("sessionid")
-            log.debug("sk: %s", sk)
-            self.session = USession(redis_pool, cookie_conf, sk)
+            try:
+                sk = self.get_cookie("sessionid")
+                log.debug("sk: %s", sk)
+                self.session = USession(redis_pool, cookie_conf, sk)
 
-            params = self.req.input()
-            userid = params.get("se_userid", -1)
-            self.user = SUser(userid, self.session, sys_role)
-            self.user.check_permission()
+                params = self.req.input()
+                userid = params.get("se_userid", -1)
+                self.user = SUser(userid, self.session, sys_role)
+                self.user.check_permission()
 
-            x = func(self, *args, **kwargs)
-            #set cookie
-            self.session.expire_session()
-            return x
+                x = func(self, *args, **kwargs)
+                #set cookie
+                self.session.expire_session()
+                return x
+            except:
+                log.warn(traceback.format_exc())
+                return error(UAURET.SERVERERR)
         return _
     return f
 
