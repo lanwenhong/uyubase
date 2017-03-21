@@ -14,20 +14,39 @@ import logging
 log = logging.getLogger()
 
 class StoreToConsumerCancel:
-    def __init__(self, *args, **kwargs):
-        self.dbret = kwargs["dbret"]
-        self.store_id = self.dbret.get("store_id", None)
-        self.consumer_id = self.dbret.get("consumer_id", None)
-        self.cancel_times = self.dbret.get("training_times")
+    #def __init__(self, *args, **kwargs):
+    def __init__(self, order_no):
+        #self.dbret = kwargs["dbret"]
+        #self.store_id = self.dbret.get("store_id", None)
+        #self.consumer_id = self.dbret.get("consumer_id", None)
+        #self.cancel_times = self.dbret.get("training_times")
+        self.order_no = order_no
 
     @with_database('uyu_core')
     def do_cancel(self):
         try:
             self.db.start()
+            sql = "select * from training_operator_record where orderno='%s' for update" % self.order_no
+            dbret = self.db.get(sql)
+            if not dbret:
+                self.db.rollback()
+                return UYU_OP_ERR
+
+            self.store_id = dbret.get("store_id", None)
+            self.consumer_id = dbret.get("consumer_id", None)
+            self.cancel_times = dbret.get("training_times")
+            ctime = dbret["create_time"]
+
+            db_day = ctime.strftime("%Y-%m-%d")
+            n_day = datetime.datetime.now().strftime("%Y-%m-%d")
+            if db_day != n_day:
+                 self.db.rollback()
+                 return UYU_OP_ERR
+
             uptime = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             sql = "update training_operator_record set status=%d, uptime_time='%s' where orderno='%s' and status=%d" % (define.UYU_ORDER_STATUS_CANCEL,
                     uptime,
-                    self.dbret["orderno"],
+                    dbret["orderno"],
                     define.UYU_ORDER_STATUS_SUCC
                     )
             ret = self.db.execute(sql)
@@ -55,20 +74,37 @@ class StoreToConsumerCancel:
             return UYU_OP_ERR
 
 class OrgAllotToChanCancel:
-    def __init__(self, *args, **kwargs):
-        self.dbret = kwargs["dbret"]
-        #self.store_id = self.dbret.get("store_id", None)
-        self.channel_id = self.dbret.get("channel_id", None)
-        self.cancel_times = self.dbret.get("training_times")
+    #def __init__(self, *args, **kwargs):
+    def __init__(self, order_no):
+        #self.dbret = kwargs["dbret"]
+        #self.channel_id = self.dbret.get("channel_id", None)
+        #self.cancel_times = self.dbret.get("training_times")
+        self.order_no = order_no
 
     @with_database('uyu_core')
     def do_cancel(self):
         try:
             self.db.start()
+            
+            sql = "select * from training_operator_record where orderno='%s' for update" % self.order_no
+            dbret = self.db.get(sql)
+            if not dbret:
+                self.db.rollback()
+                return UYU_OP_ERR
+            self.channel_id = dbret.get("channel_id", None)
+            self.cancel_times = dbret.get("training_times")
+            ctime = dbret["create_time"]
+
+            db_day = ctime.strftime("%Y-%m-%d")
+            n_day = datetime.datetime.now().strftime("%Y-%m-%d")
+            if db_day != n_day:
+                 self.db.rollback()
+                 return UYU_OP_ERR
+
             uptime = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             sql = "update training_operator_record set status=%d, uptime_time='%s'  where orderno='%s' and status=%d" % (define.UYU_ORDER_STATUS_CANCEL,
                 uptime,
-                self.dbret["orderno"],
+                dbret["orderno"],
                 define.UYU_ORDER_STATUS_SUCC
                 )
             ret = self.db.execute(sql)
@@ -88,20 +124,38 @@ class OrgAllotToChanCancel:
             return UYU_OP_ERR
 
 class ChanAllotStoreCancel:
-    def __init__(self, *args, **kwargs):
-        self.dbret = kwargs["dbret"]
-        self.store_id = self.dbret.get("store_id", None)
-        self.channel_id = self.dbret.get("channel_id", None)
-        self.cancel_times = self.dbret.get("training_times")
+    #def __init__(self, *args, **kwargs):
+    def __init__(self, order_no):
+        #self.dbret = kwargs["dbret"]
+        #self.store_id = self.dbret.get("store_id", None)
+        #self.channel_id = self.dbret.get("channel_id", None)
+        #self.cancel_times = self.dbret.get("training_times")
+        self.order_no = order_no
 
     @with_database('uyu_core')
     def do_cancel(self):
         try:
             self.db.start()
+            sql = "select * from training_operator_record where orderno='%s' for update" % self.order_no
+            dbret = self.db.get(sql)
+            if not dbret:
+                self.db.rollback()
+                return UYU_OP_ERR
+            self.channel_id = dbret.get("channel_id", None)
+            self.store_id = dbret.get("store_id", None)
+            self.cancel_times = dbret.get("training_times")
+            ctime = dbret["create_time"]
+
+            db_day = ctime.strftime("%Y-%m-%d")
+            n_day = datetime.datetime.now().strftime("%Y-%m-%d")
+            if db_day != n_day:
+                 self.db.rollback()
+                 return UYU_OP_ERR
+
             uptime = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             sql = "update training_operator_record set status=%d, uptime_time='%s' where orderno='%s' and status=%d" % (define.UYU_ORDER_STATUS_CANCEL,
                 uptime,
-                self.dbret["orderno"],
+                dbret["orderno"],
                 define.UYU_ORDER_STATUS_SUCC
                 )
 
@@ -162,28 +216,35 @@ class TrainingOP:
 
             return order_no
 
+    #@with_database('uyu_core')
+    #def __check_cancel_permission(self):
+    #    dbret = self.db.select_one("training_operator_record", {"orderno": self.order_no})
+    #    ctime = dbret["create_time"]
+    #    db_day = ctime.strftime("%Y-%m-%d")
+    #    n_day = datetime.datetime.now().strftime("%Y-%m-%d")
+    #    if db_day != n_day:
+    #        return False, None
+    #    return True, dbret
+    
     @with_database('uyu_core')
-    def __check_cancel_permission(self):
-        dbret = self.db.select_one("training_operator_record", {"orderno": self.order_no})
-        ctime = dbret["create_time"]
-        db_day = ctime.strftime("%Y-%m-%d")
-        n_day = datetime.datetime.now().strftime("%Y-%m-%d")
-        if db_day != n_day:
+    def __get_busicd(self):
+        dbret = self.db.select_one('training_operator_record', {"orderno": self.order_no})
+        if not dbret:
             return False, None
-        return True, dbret
+        return True, dbret["busicd"]
+
 
     def order_cancel(self):
-        can_cancel, dbret = self.__check_cancel_permission()
-        if can_cancel and dbret:
-            busicd = dbret.get("busicd", "")
-            log.debug("dbret: %s busicd: %s", dbret, busicd)
-            handler_class = self.cancel_handler.get(busicd)
-            if not handler_class:
-                return UYU_OP_ERR
-            obj_handler = handler_class(dbret=dbret)
-            ret = obj_handler.do_cancel()
-            return ret
-        return UYU_OP_ERR
+        flag, busicd = self.__get_busicd()
+        if not flag:
+            return UYU_OP_ERR
+        log.debug("busicd: %s", busicd)
+        handler_class = self.cancel_handler.get(busicd)
+        if not handler_class:
+            return UYU_OP_ERR
+        obj_handler = handler_class(self.order_no)
+        ret = obj_handler.do_cancel()
+        return ret
 
     def __gen_vsql(self, order_status):
         sql_value = {}
