@@ -148,11 +148,19 @@ class TrainingOP:
             define.BUSICD_CHAN_ALLOT_TO_STORE: ChanAllotStoreCancel,
             define.BUSICD_CHAN_ALLOT_TO_COSUMER: StoreToConsumerCancel,
         }
-
+    
     def create_orderno(self):
         with dbpool.get_connection('uyu_core') as conn:
-            myid = new_id64(conn=conn)
-            return datetime.datetime.now().strftime("%Y%m%d%H%M%S") + str(myid)
+            sql = "replace into counter set name=%d" % 1
+            ret = conn.execute(sql)
+
+            if ret != 2:
+                log.wanr("create order_no error")
+                raise ValueError, "order_no counter error"
+            c_id = "%08d" % (conn.last_insert_id() % 100000000)
+            order_no = datetime.datetime.now().strftime("%Y%m%d") + c_id 
+
+            return order_no
 
     @with_database('uyu_core')
     def __check_cancel_permission(self):
@@ -230,12 +238,12 @@ class TrainingOP:
     def create_org_allot_to_chan_order(self):
         chan_id = self.cdata["channel_id"]
         log.debug("chan_id: %d", chan_id)
-        sql_value = self.__gen_vsql(UYU_ORDER_STATUS_SUCC)
-        sql_value["op_type"] = define.UYU_ORDER_TYPE_ALLOT
-        sql_value["op_name"] = self.suser.get("login_name", "")
-        self.__gen_buyer_seller(define.BUSICD_ORG_ALLOT_TO_CHAN, sql_value, chan_id)
-
         try:
+            sql_value = self.__gen_vsql(UYU_ORDER_STATUS_SUCC)
+            sql_value["op_type"] = define.UYU_ORDER_TYPE_ALLOT
+            sql_value["op_name"] = self.suser.get("login_name", "")
+            self.__gen_buyer_seller(define.BUSICD_ORG_ALLOT_TO_CHAN, sql_value, chan_id)
+
             self.db.start()
             self.db.insert("training_operator_record", sql_value)
             training_times = self.cdata["training_times"]
@@ -257,12 +265,12 @@ class TrainingOP:
     def create_org_allot_to_store_order(self):
         chan_id = self.cdata["channel_id"]
         store_id = self.cdata["store_id"]
-        sql_value = self.__gen_vsql(UYU_ORDER_STATUS_SUCC)
-
-        sql_value["op_type"] = define.UYU_ORDER_TYPE_ALLOT
-        sql_value["op_name"] = self.suser.get("login_name", "")
-        self.__gen_buyer_seller(define.BUSICD_CHAN_ALLOT_TO_STORE, sql_value, chan_id, store_id)
         try:
+            sql_value = self.__gen_vsql(UYU_ORDER_STATUS_SUCC)
+
+            sql_value["op_type"] = define.UYU_ORDER_TYPE_ALLOT
+            sql_value["op_name"] = self.suser.get("login_name", "")
+            self.__gen_buyer_seller(define.BUSICD_CHAN_ALLOT_TO_STORE, sql_value, chan_id, store_id)
             self.db.start()
             self.db.insert("training_operator_record", sql_value)
             training_times = self.cdata["training_times"]
@@ -285,11 +293,12 @@ class TrainingOP:
         store_id = self.cdata["store_id"]
         userid = self.cdata["consumer_id"]
 
-        sql_value = self.__gen_vsql(UYU_ORDER_STATUS_SUCC)
-        sql_value["op_type"] = define.UYU_ORDER_TYPE_ALLOT
-        sql_value["op_name"] = self.suser.get("login_name", "")
-        self.__gen_buyer_seller(define.BUSICD_CHAN_ALLOT_TO_COSUMER, sql_value, store_id=store_id, consumer_id=userid)
         try:
+            sql_value = self.__gen_vsql(UYU_ORDER_STATUS_SUCC)
+            sql_value["op_type"] = define.UYU_ORDER_TYPE_ALLOT
+            sql_value["op_name"] = self.suser.get("login_name", "")
+            self.__gen_buyer_seller(define.BUSICD_CHAN_ALLOT_TO_COSUMER, sql_value, store_id=store_id, consumer_id=userid)
+
             log.debug("=====sql_value: %s", sql_value)
             self.db.start()
             self.db.insert("training_operator_record", sql_value)
@@ -315,13 +324,13 @@ class TrainingOP:
     @with_database('uyu_core')
     def create_chan_buy_trainings_order(self):
         chan_id = self.cdata["channel_id"]
-        sql_value = self.__gen_vsql(UYU_ORDER_STATUS_NEED_CONFIRM)
-
-        sql_value["op_type"] = define.UYU_ORDER_TYPE_BUY
-        sql_value["op_name"] = self.suser.get("login_name", "")
-        self.__gen_buyer_seller(define.BUSICD_CHAN_BUY_TRAING_TIMES, sql_value, chan_id)
-
         try:
+            sql_value = self.__gen_vsql(UYU_ORDER_STATUS_NEED_CONFIRM)
+
+            sql_value["op_type"] = define.UYU_ORDER_TYPE_BUY
+            sql_value["op_name"] = self.suser.get("login_name", "")
+            self.__gen_buyer_seller(define.BUSICD_CHAN_BUY_TRAING_TIMES, sql_value, chan_id)
+
             self.db.insert("training_operator_record", sql_value)
             return UYU_OP_OK
         except:
@@ -333,12 +342,12 @@ class TrainingOP:
     def create_chan_allot_to_store_order(self):
         chan_id = self.cdata["channel_id"]
         store_id = self.cdata["store_id"]
-        sql_value = self.__gen_vsql(UYU_ORDER_STATUS_SUCC)
-
-        sql_value["op_type"] = define.UYU_ORDER_TYPE_ALLOT
-        sql_value["op_name"] = self.suser.get("login_name", "")
-        self.__gen_buyer_seller(define.BUSICD_CHAN_ALLOT_TO_STORE, sql_value, chan_id, store_id)
         try:
+            sql_value = self.__gen_vsql(UYU_ORDER_STATUS_SUCC)
+
+            sql_value["op_type"] = define.UYU_ORDER_TYPE_ALLOT
+            sql_value["op_name"] = self.suser.get("login_name", "")
+            self.__gen_buyer_seller(define.BUSICD_CHAN_ALLOT_TO_STORE, sql_value, chan_id, store_id)
             log.debug("=====sql_value: %s", sql_value)
             self.db.start()
             self.db.insert("training_operator_record", sql_value)
