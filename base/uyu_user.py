@@ -205,7 +205,11 @@ class UUser:
     @with_database('uyu_core')
     def set_store_state(self, userid, state):
         self.db.update("stores", {"is_valid": state}, {"userid": userid})
-        self.db.update("auth_user", {"state": define.UYU_USER_STATE_FORBIDDEN}, {"id": userid})
+        if state == define.UYU_STORE_STATUS_OPEN:
+            user_state = define.UYU_USER_STATE_OK
+        else:
+            user_state = define.UYU_USER_STATE_FORBIDDEN
+        self.db.update("auth_user", {"state": user_state}, {"id": userid})
 
     @with_database('uyu_core')
     def __update_user(self, userid, udata):

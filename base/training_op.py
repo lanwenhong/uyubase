@@ -76,7 +76,7 @@ class OrgAllotToChanCancel:
     def do_cancel(self):
         try:
             self.db.start()
-            
+
             sql = "select * from training_operator_record where orderno='%s' for update" % self.order_no
             dbret = self.db.get(sql)
             if not dbret:
@@ -188,7 +188,7 @@ class TrainingOP:
             define.BUSICD_CHAN_ALLOT_TO_STORE: ChanAllotStoreCancel,
             define.BUSICD_CHAN_ALLOT_TO_COSUMER: StoreToConsumerCancel,
         }
-    
+
     def create_orderno(self):
         with dbpool.get_connection('uyu_core') as conn:
             sql = "replace into counter set name=%d" % 1
@@ -198,7 +198,7 @@ class TrainingOP:
                 log.wanr("create order_no error")
                 raise ValueError, "order_no counter error"
             c_id = "%08d" % (conn.last_insert_id() % 100000000)
-            order_no = datetime.datetime.now().strftime("%Y%m%d") + c_id 
+            order_no = datetime.datetime.now().strftime("%Y%m%d") + c_id
 
             return order_no
 
@@ -211,7 +211,7 @@ class TrainingOP:
     #    if db_day != n_day:
     #        return False, None
     #    return True, dbret
-    
+
     @with_database('uyu_core')
     def __get_busicd(self):
         dbret = self.db.select_one('training_operator_record', {"orderno": self.order_no})
@@ -231,6 +231,17 @@ class TrainingOP:
         obj_handler = handler_class(self.order_no)
         ret = obj_handler.do_cancel()
         return ret
+
+
+    def order_confirm(self):
+        flag, busicd = self.__get_busicd()
+        if not flag:
+            return UYU_OP_ERR
+        log.debug("busicd: %s", busicd)
+        obj_handler = OrgConfirmChannel(self.order_no)
+        ret = obj_handler.do_confirm()
+        return ret
+
 
     def __gen_vsql(self, order_status):
         sql_value = {}
@@ -422,3 +433,48 @@ class TrainingOP:
 
     def set_order_status(self, status):
         pass
+
+
+class OrgConfirmChannel:
+    def __init__(self, order_no):
+        self.order_no = order_no
+
+
+    @with_database('uyu_core')
+    def do_confirm(self):
+        try:
+            self.db.start()
+            sql = "select * from training_operator_record where orderno='%s' for update" % self.order_no
+            dbret = self.db.get(sql)
+            if not dbret:
+                self.db.rollback()
+                return UYU_OP_ERR
+
+            status = dbret['status']
+            busicd = dbret['busicd']
+            self.channel_id = dbret['channel_id']
+            self.training_times = dbret['training_times']
+            self.record_id = dbret['id']
+
+            if busicd == define.BUSICD_CHAN_BUY_TRAING_TIMES and status == define.UYU_ORDER_STATUS_NEED_CONFIRM:
+                uptime = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                sql = "update channel set remain_times=remain_times+%d, utime='%s' where id=%d" % (self.training_times, uptime, self.channel_id)
+                ret = self.db.execute(sql)
+                if ret == 0:
+                    self.db.rollback()
+                    return UYU_OP_ERR
+
+                sql = "update training_operator_record set status=%d, uptime_time='%s' where id=%d" % (define.UYU_ORDER_STATUS_SUCC, uptime, self.record_id)
+                ret = self.db.execute(sql)
+                if ret == 0:
+                    self.db.rollback()
+                    return UYU_OP_ERR
+            else:
+                return UYU_OP_ERR
+
+            self.db.commit()
+            return UYU_OP_OK
+        except:
+            self.db.rollback()
+            log.warn(traceback.format_exc())
+            return UYU_OP_ERR
