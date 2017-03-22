@@ -361,7 +361,7 @@ class TrainingOP:
             self.db.start()
             self.db.insert("training_operator_record", sql_value)
             training_times = self.cdata["training_times"]
-            sql = "update stores set remain_times=remain_times-%d where id=%d and remain_times>=%d" % (training_times, store_id, training_times)
+            sql = "update stores set remain_times=remain_times-%d where id=%d and remain_times>%d" % (training_times, store_id, training_times)
             ret = self.db.execute(sql)
             if ret == 0:
                 self.db.rollback()
