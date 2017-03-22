@@ -14,12 +14,7 @@ import logging
 log = logging.getLogger()
 
 class StoreToConsumerCancel:
-    #def __init__(self, *args, **kwargs):
     def __init__(self, order_no):
-        #self.dbret = kwargs["dbret"]
-        #self.store_id = self.dbret.get("store_id", None)
-        #self.consumer_id = self.dbret.get("consumer_id", None)
-        #self.cancel_times = self.dbret.get("training_times")
         self.order_no = order_no
 
     @with_database('uyu_core')
@@ -74,11 +69,7 @@ class StoreToConsumerCancel:
             return UYU_OP_ERR
 
 class OrgAllotToChanCancel:
-    #def __init__(self, *args, **kwargs):
     def __init__(self, order_no):
-        #self.dbret = kwargs["dbret"]
-        #self.channel_id = self.dbret.get("channel_id", None)
-        #self.cancel_times = self.dbret.get("training_times")
         self.order_no = order_no
 
     @with_database('uyu_core')
@@ -124,12 +115,7 @@ class OrgAllotToChanCancel:
             return UYU_OP_ERR
 
 class ChanAllotStoreCancel:
-    #def __init__(self, *args, **kwargs):
     def __init__(self, order_no):
-        #self.dbret = kwargs["dbret"]
-        #self.store_id = self.dbret.get("store_id", None)
-        #self.channel_id = self.dbret.get("channel_id", None)
-        #self.cancel_times = self.dbret.get("training_times")
         self.order_no = order_no
 
     @with_database('uyu_core')
