@@ -88,14 +88,11 @@ UYU_STORE_EYESIGHT_BIND_MAP = {
 }
 
 #设备状态
-#启用
-UYU_DEVICE_OPEN = 0
-#关闭
-UYU_DEVICE_CLOSE = 1
+#正常
+UYU_DEVICE_NORMAL = 0
 
 UYU_DEVICE_MAP = {
-    UYU_DEVICE_OPEN : '启用',
-    UYU_DEVICE_CLOSE : '关闭',
+    UYU_DEVICE_NORMAL : '正常',
 }
 
 #训练使用状态
