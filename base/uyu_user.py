@@ -405,8 +405,8 @@ class UUser:
         try:
             where = {'id': serial_number}
             values = {'channel_id': channel_id}
-            if store_id:
-                values.update({'store_id': store_id})
+            # if store_id:
+            values.update({'store_id': store_id})
             ret = self.db.update(table='device', values=values, where=where)
             log.debug('allocate_device values:%s, where: %s, ret: %s', values, where, ret)
         except Exception as e:
