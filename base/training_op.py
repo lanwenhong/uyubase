@@ -187,6 +187,7 @@ class TrainingOP:
             define.BUSICD_ORG_ALLOT_TO_CHAN: OrgAllotToChanCancel,
             define.BUSICD_CHAN_ALLOT_TO_STORE: ChanAllotStoreCancel,
             define.BUSICD_CHAN_ALLOT_TO_COSUMER: StoreToConsumerCancel,
+            define.BUSICD_CHAN_BUY_TRAING_TIMES: OrgAllotToChanCancel,
         }
 
     def create_orderno(self):
@@ -228,6 +229,7 @@ class TrainingOP:
         handler_class = self.cancel_handler.get(busicd)
         if not handler_class:
             return UYU_OP_ERR
+        log.debug("order_no: %s", self.order_no)
         obj_handler = handler_class(self.order_no)
         ret = obj_handler.do_cancel()
         return ret
