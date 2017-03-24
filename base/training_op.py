@@ -282,8 +282,8 @@ class TrainingOP:
             sql_value['seller_id'] = ch_ret.get('userid')
         elif busicd == define.BUSICD_CHAN_ALLOT_TO_COSUMER:
             st_ret = self.db.select_one(table='stores', fields='store_name, userid', where={'id': store_id})
-            at_ret = self.db.select_one(table='auth_user', fields='phone_num', where={'id': consumer_id})
-            sql_value['buyer'] = at_ret.get('phone_num')
+            at_ret = self.db.select_one(table='auth_user', fields='username', where={'id': consumer_id})
+            sql_value['buyer'] = at_ret.get('username')
             sql_value['buyer_id'] = consumer_id
             sql_value['seller'] = st_ret.get('store_name')
             sql_value['seller_id'] = st_ret.get('userid')
