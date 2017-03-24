@@ -43,6 +43,10 @@ class USession:
         client = redis.StrictRedis(connection_pool=self.redis_pool)
         client.expire(self.sk, self.c_conf["expires"])
 
+    def rm_session(self):
+        client = redis.StrictRedis(connection_pool=self.redis_pool)
+        client.delete(self.sk)
+
 class SUser:
     def __init__(self, userid, session, sys_role):
         #session 检查， SESSION中的USERID和传上来的USERID是否一致
@@ -79,6 +83,11 @@ class SUser:
 
         log.debug("self.userd: %d s_userid: %d", self.userid, v.get("userid"))
         if self.userid != v.get("userid"):
+            return False
+        
+        self.load_user()
+        if self.udata["state"] != define.UYU_USER_STATE_OK:
+            self.se.rm_session()
             return False
 
         log.debug("session check ok")
@@ -191,10 +200,12 @@ def uyu_check_session_for_page(redis_pool, cookie_conf, sys_role):
                     flag = False
 
                 log.debug("tool get plist: %s", plist)
-                user_type = v.get("user_type")
-                if user_type not in plist:
-                    log.debug('tool user type error')
-                    flag = False
+                if v:
+                    user_type = v.get("user_type")
+                    log.debug("user_type: %d", user_type)
+                    if user_type not in plist:
+                        log.debug('tool user type error')
+                        flag = False
 
                 if not flag:
                     if sys_role == define.UYU_SYS_ROLE_OP:
@@ -204,8 +215,10 @@ def uyu_check_session_for_page(redis_pool, cookie_conf, sys_role):
 
                 ret = func(self, *args, **kwargs)
                 return ret
-            except Exception as e:
-                log.warn(e)
+            #except Exception as e:
+            except:
+                #log.warn(e)
+                log.warn(traceback.format_exc())
                 log.debug('tool except redirect')
                 if sys_role == define.UYU_SYS_ROLE_OP:
                     self.redirect('/channel_op/v1/page/login.html')
