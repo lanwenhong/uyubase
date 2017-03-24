@@ -199,7 +199,14 @@ class UUser:
     @with_database('uyu_core')
     def set_chan_state(self, userid, state):
         self.db.update("channel", {"is_valid": state}, {"userid": userid})
-        self.db.update("auth_user", {"state": define.UYU_USER_STATE_FORBIDDEN}, {"id": userid})
+        #self.db.update("auth_user", {"state": define.UYU_USER_STATE_FORBIDDEN}, {"id": userid})
+        if state == define.UYU_CHAN_STATUS_OPEN:
+            user_state = define.UYU_USER_STATE_OK
+        else:
+            user_state = define.UYU_USER_STATE_FORBIDDEN
+        self.db.update("auth_user", {"state": user_state}, {"id": userid})
+
+
 
     #设置门店状态，打开/关闭
     @with_database('uyu_core')

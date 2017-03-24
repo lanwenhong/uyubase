@@ -55,7 +55,7 @@ class StoreToConsumerCancel:
                 self.db.rollback()
                 log.warn("update sotres %d fail", self.store_id)
                 return UYU_OP_ERR
-            sql = "update consumer set remain_times=remain_times-%d where userid=%d" % (self.cancel_times, self.consumer_id)
+            sql = "update consumer set remain_times=remain_times-%d where userid=%d and remain_times>%d" % (self.cancel_times, self.consumer_id, self.cancel_times)
             ret = self.db.execute(sql)
             if ret == 0:
                 log.warn("update consumer %d fail", self.consumer_id)
@@ -102,7 +102,7 @@ class OrgAllotToChanCancel:
             if ret == 0:
                 self.db.rollback()
                 return UYU_OP_ERR
-            sql = "update channel set remain_times=remain_times-%d where id=%d" % (self.cancel_times, self.channel_id)
+            sql = "update channel set remain_times=remain_times-%d where id=%d and remain_times>%d" % (self.cancel_times, self.channel_id, self.cancel_times)
             ret = self.db.execute(sql)
             if ret == 0:
                 self.db.rollback()
@@ -154,7 +154,7 @@ class ChanAllotStoreCancel:
             if ret == 0:
                 self.db.rollback()
                 return UYU_OP_ERR
-            sql = "update stores set remain_times=remain_times-%d where id=%d" % (self.cancel_times, self.store_id)
+            sql = "update stores set remain_times=remain_times-%d where id=%d and remain_times>%d" % (self.cancel_times, self.store_id, self.cancel_times)
             ret = self.db.execute(sql)
             if ret == 0:
                 self.db.rollback()
@@ -410,7 +410,7 @@ class TrainingOP:
             self.db.start()
             self.db.insert("training_operator_record", sql_value)
             training_times = self.cdata["training_times"]
-            sql = "update channel set remain_times=remain_times-%d where id=%d and remain_times>=%d" % (training_times, chan_id, training_times)
+            sql = "update channel set remain_times=remain_times-%d where id=%d and remain_times>%d" % (training_times, chan_id, training_times)
             ret = self.db.execute(sql)
             if ret == 0:
                 self.db.rollback()
