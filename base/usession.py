@@ -84,7 +84,7 @@ class SUser:
         log.debug("self.userd: %d s_userid: %d", self.userid, v.get("userid"))
         if self.userid != v.get("userid"):
             return False
-        
+
         self.load_user()
         if self.udata["state"] != define.UYU_USER_STATE_OK:
             self.se.rm_session()
