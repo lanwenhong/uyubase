@@ -369,11 +369,27 @@ class TrainingOP:
                 self.db.rollback()
                 self.respcd = response.UAURET.BALANCEERR
                 return UYU_OP_ERR
-            sql = "update consumer set remain_times=remain_times+%d where userid=%d" % (training_times, userid)
-            ret = self.db.execute(sql)
-            if ret == 0:
-                self.db.rollback()
-                return UYU_OP_ERR
+
+            record = self.db.select_one(table='consumer', fields='*', where={'userid': userid, 'store_id': store_id})
+            if record:
+                sql = "update consumer set remain_times=remain_times+%d where userid=%d and store_id=%d" % (training_times, userid, store_id)
+                ret = self.db.execute(sql)
+                if ret == 0:
+                    self.db.rollback()
+                    return UYU_OP_ERR
+            else:
+                now = datetime.datetime.now()
+                value = {
+                    'userid': userid,
+                    'remain_times': training_times,
+                    'store_id': store_id,
+                    'create_time': now,
+                }
+                ret = self.db.insert(table='consumer', values=value);
+                if ret != 1:
+                    self.db.rollback()
+                    return UYU_OP_ERR
+
             self.db.commit()
             return UYU_OP_OK
         except:
