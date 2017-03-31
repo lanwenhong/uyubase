@@ -301,7 +301,7 @@ class TrainingOP:
         try:
             sql_value = self.__gen_vsql(UYU_ORDER_STATUS_SUCC)
             sql_value["op_type"] = define.UYU_ORDER_TYPE_ALLOT
-            sql_value["op_name"] = self.suser.get("login_name", "")
+            sql_value["op_name"] = self.suser.get("username", "")
             self.__gen_buyer_seller(define.BUSICD_ORG_ALLOT_TO_CHAN, sql_value, chan_id)
 
             self.db.start()
@@ -329,7 +329,7 @@ class TrainingOP:
             sql_value = self.__gen_vsql(UYU_ORDER_STATUS_SUCC)
 
             sql_value["op_type"] = define.UYU_ORDER_TYPE_ALLOT
-            sql_value["op_name"] = self.suser.get("login_name", "")
+            sql_value["op_name"] = self.suser.get("username", "")
             self.__gen_buyer_seller(define.BUSICD_CHAN_ALLOT_TO_STORE, sql_value, chan_id, store_id)
             self.db.start()
             self.db.insert("training_operator_record", sql_value)
@@ -356,7 +356,7 @@ class TrainingOP:
         try:
             sql_value = self.__gen_vsql(UYU_ORDER_STATUS_SUCC)
             sql_value["op_type"] = define.UYU_ORDER_TYPE_ALLOT
-            sql_value["op_name"] = self.suser.get("login_name", "")
+            sql_value["op_name"] = self.suser.get("username", "")
             self.__gen_buyer_seller(define.BUSICD_CHAN_ALLOT_TO_COSUMER, sql_value, store_id=store_id, consumer_id=userid)
 
             log.debug("=====sql_value: %s", sql_value)
@@ -404,7 +404,7 @@ class TrainingOP:
             sql_value = self.__gen_vsql(UYU_ORDER_STATUS_NEED_CONFIRM)
 
             sql_value["op_type"] = define.UYU_ORDER_TYPE_BUY
-            sql_value["op_name"] = self.suser.get("login_name", "")
+            sql_value["op_name"] = self.suser.get("username", "")
             self.__gen_buyer_seller(define.BUSICD_CHAN_BUY_TRAING_TIMES, sql_value, chan_id)
 
             self.db.insert("training_operator_record", sql_value)
@@ -422,7 +422,7 @@ class TrainingOP:
             sql_value = self.__gen_vsql(UYU_ORDER_STATUS_SUCC)
 
             sql_value["op_type"] = define.UYU_ORDER_TYPE_ALLOT
-            sql_value["op_name"] = self.suser.get("login_name", "")
+            sql_value["op_name"] = self.suser.get("username", "")
             self.__gen_buyer_seller(define.BUSICD_CHAN_ALLOT_TO_STORE, sql_value, chan_id, store_id)
             log.debug("=====sql_value: %s", sql_value)
             self.db.start()
