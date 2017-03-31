@@ -352,7 +352,7 @@ class TrainingOP:
     def create_store_allot_to_consumer_order(self):
         store_id = self.cdata["store_id"]
         userid = self.cdata["consumer_id"]
-
+        now = datetime.datetime.now()
         try:
             sql_value = self.__gen_vsql(UYU_ORDER_STATUS_SUCC)
             sql_value["op_type"] = define.UYU_ORDER_TYPE_ALLOT
@@ -363,7 +363,7 @@ class TrainingOP:
             self.db.start()
             self.db.insert("training_operator_record", sql_value)
             training_times = self.cdata["training_times"]
-            sql = "update stores set remain_times=remain_times-%d where id=%d and remain_times>%d" % (training_times, store_id, training_times)
+            sql = "update stores set remain_times=remain_times-%d, utime='%s' where id=%d and remain_times>%d" % (training_times, now, store_id, training_times)
             ret = self.db.execute(sql)
             if ret == 0:
                 self.db.rollback()
@@ -372,7 +372,7 @@ class TrainingOP:
 
             record = self.db.select_one(table='consumer', fields='*', where={'userid': userid, 'store_id': store_id})
             if record:
-                sql = "update consumer set remain_times=remain_times+%d where userid=%d and store_id=%d" % (training_times, userid, store_id)
+                sql = "update consumer set remain_times=remain_times+%d, uptime_time='%s' where userid=%d and store_id=%d" % (training_times, now, userid, store_id)
                 ret = self.db.execute(sql)
                 if ret == 0:
                     self.db.rollback()
