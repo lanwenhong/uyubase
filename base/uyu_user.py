@@ -263,9 +263,11 @@ class UUser:
 
             where = {"eyesight_id": userid, "store_id": store_id, "channel_id": chan_id}
             ret = self.db.select_one(table='store_eyesight_bind', fields='*', where=where)
+            now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             if not ret:
                 sql_value = {"eyesight_id": userid, "store_id": store_id, "channel_id": chan_id, 'is_valid': define.UYU_STORE_EYESIGHT_BIND}
-                sql_value['ctime'] = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                sql_value['ctime'] = now
+                sql_value['utime'] = now
                 self.db.insert("store_eyesight_bind", sql_value)
                 return True, UAURET.OK
             else:
@@ -275,7 +277,7 @@ class UUser:
                 else:
                     self.db.update(
                         table='store_eyesight_bind',
-                        values={'is_valid': define.UYU_STORE_EYESIGHT_BIND},
+                        values={'is_valid': define.UYU_STORE_EYESIGHT_BIND, 'utime': now},
                         where={'eyesight_id': userid, 'store_id': store_id, 'channel_id': chan_id}
                     )
                     return True, UAURET.OK
