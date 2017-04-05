@@ -20,7 +20,8 @@ def gen_passwd(password):
     pre = ''
     data_str = string.lowercase + string.digits
     data_list = list(data_str)
-    len = random.randint(5,15)
+    # len = random.randint(5,15)
+    len = 5
     for i in range(0, len):
         pre += random.choice(data_list)
 
