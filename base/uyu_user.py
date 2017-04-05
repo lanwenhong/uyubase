@@ -156,9 +156,12 @@ class UUser:
             sql_value = self.__gen_vsql(self.ukey, udata)
             sql_value["ctime"] = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             mobile = udata["login_name"]
-            sql_value["password"] = gen_passwd(mobile[-6:])
+            if role == define.UYU_USER_ROLE_STORE:
+                md5_password = hashlib.md5(mobile[-6:]).hexdigest()
+                sql_value["password"] = gen_passwd(md5_password)
+            else:
+                sql_value["password"] = gen_passwd(mobile[-6:])
             sql_value["state"] = define.UYU_USER_STATE_OK
-            #sql_value["user_type"] = define.UYU_USER_ROLE_CHAN
             sql_value["user_type"] = role
             return sql_value
 
@@ -398,7 +401,7 @@ class UUser:
 
     @with_database('uyu_core')
     def check_userlogin(self, mobile, password, sys_role):
-        record = self.db.select_one("auth_user", {"phone_num": mobile, "password": password, "state": define.UYU_USER_STATE_OK})
+        record = self.db.select_one("auth_user", {"phone_num": mobile, "state": define.UYU_USER_STATE_OK})
         log.debug("get record: %s", record)
         if record:
             for key in self.ukey:
