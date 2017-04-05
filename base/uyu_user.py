@@ -137,7 +137,8 @@ class UUser:
         sql_value["ctime"] = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         mobile = udata["login_name"]
         #默认密码手机号后六位
-        sql_value["password"] = gen_passwd(mobile[-6:])
+        md5_password = hashlib.md5(mobile[-6:]).hexdigest()
+        sql_value["password"] = gen_passwd(md5_password)
         sql_value["state"] = define.UYU_USER_STATE_OK
         self.db.insert("auth_user", sql_value)
         self.userid = self.db.last_insert_id()
@@ -157,11 +158,8 @@ class UUser:
             sql_value = self.__gen_vsql(self.ukey, udata)
             sql_value["ctime"] = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             mobile = udata["login_name"]
-            if role == define.UYU_USER_ROLE_STORE:
-                md5_password = hashlib.md5(mobile[-6:]).hexdigest()
-                sql_value["password"] = gen_passwd(md5_password)
-            else:
-                sql_value["password"] = gen_passwd(mobile[-6:])
+            md5_password = hashlib.md5(mobile[-6:]).hexdigest()
+            sql_value["password"] = gen_passwd(md5_password)
             sql_value["state"] = define.UYU_USER_STATE_OK
             sql_value["user_type"] = role
             return sql_value
@@ -419,7 +417,7 @@ class UUser:
             sql = "select * from verify_code where mobile='%s' and stime<%d and etime>%d" % (mobile, now, now)
             dbret = self.db.get(sql)
             log.debug("dbret: %s", dbret)
-
+            # 修改密码的password是js已经md5后的hash
             enc_password = gen_passwd(password)
             if dbret and vcode == dbret['code']:
                 sql = "update auth_user set password='%s' where phone_num='%s'" % (enc_password, mobile)
