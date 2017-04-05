@@ -5,12 +5,58 @@ from zbase.base.dbpool import with_database
 import logging, time, random
 import traceback
 
+import string
+import hashlib
+
 from uyubase.base.response import success, error, UAURET
 from uyubase.uyu import define
 from uyubase.uyu.define import UYU_OP_OK, UYU_OP_ERR
 
 import logging, datetime
 log = logging.getLogger()
+
+
+def gen_passwd(password):
+    pre = ''
+    data_str = string.lowercase + string.digits
+    data_list = list(data_str)
+    len = random.randint(5,15)
+    for i in range(0, len):
+        pre += random.choice(data_list)
+
+    deal_passwd=hashlib.sha1(pre+password).hexdigest()
+    finish_passwd='sha1$'+pre+'$'+deal_passwd
+    return finish_passwd
+
+
+def constant_time_compare(val1, val2):
+    if len(val1) != len(val2):
+        return False
+    result = 0
+    for x, y in zip(val1, val2):
+        result |= ord(x) ^ ord(y)
+    return result == 0
+
+
+def get_hexdigest(algorithm, salt, raw_password):
+    if algorithm == 'crypt':
+        try:
+            import crypt
+        except ImportError:
+            raise ValueError('"crypt" password algorithm not supported in this environment')
+        return crypt.crypt(raw_password, salt)
+
+    if algorithm == 'md5':
+        return hashlib.md5(salt + raw_password).hexdigest()
+    elif algorithm == 'sha1':
+        return hashlib.sha1(salt + raw_password).hexdigest()
+    raise ValueError("Got unknown password algorithm type in password.")
+
+
+def check_password(raw_password, enc_password):
+    algo, salt, hsh = enc_password.split('$')
+    return constant_time_compare(hsh, get_hexdigest(algo, salt, raw_password))
+
 
 class VCode:
     def __init__(self):
@@ -90,7 +136,7 @@ class UUser:
         sql_value["ctime"] = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         mobile = udata["login_name"]
         #默认密码手机号后六位
-        sql_value["password"] = mobile[-6:]
+        sql_value["password"] = gen_passwd(mobile[-6:])
         sql_value["state"] = define.UYU_USER_STATE_OK
         self.db.insert("auth_user", sql_value)
         self.userid = self.db.last_insert_id()
@@ -110,7 +156,7 @@ class UUser:
             sql_value = self.__gen_vsql(self.ukey, udata)
             sql_value["ctime"] = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             mobile = udata["login_name"]
-            sql_value["password"] = mobile[-6:]
+            sql_value["password"] = gen_passwd(mobile[-6:])
             sql_value["state"] = define.UYU_USER_STATE_OK
             #sql_value["user_type"] = define.UYU_USER_ROLE_CHAN
             sql_value["user_type"] = role
@@ -359,7 +405,7 @@ class UUser:
                 log.debug(key)
                 if record.get(key, None):
                     self.udata[key] = record[key]
-            if self._check_permission(self.udata['user_type'], sys_role) and password == self.udata["password"]:
+            if self._check_permission(self.udata['user_type'], sys_role) and check_password(password, self.udata["password"]):
                 self.login = True
 
     @with_database('uyu_core')
@@ -370,8 +416,9 @@ class UUser:
             dbret = self.db.get(sql)
             log.debug("dbret: %s", dbret)
 
+            enc_password = gen_passwd(password)
             if dbret and vcode == dbret['code']:
-                sql = "update auth_user set password='%s' where phone_num='%s'" % (password, mobile)
+                sql = "update auth_user set password='%s' where phone_num='%s'" % (enc_password, mobile)
                 self.db.execute(sql)
                 return UAURET.OK
             return UAURET.VCODEERR
