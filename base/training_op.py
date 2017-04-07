@@ -497,3 +497,63 @@ class OrgConfirmChannel:
             self.db.rollback()
             log.warn(traceback.format_exc())
             return UYU_OP_ERR
+
+
+
+class ConsumerTimesChange:
+
+    def __init__(self):
+        pass
+
+    @with_database('uyu_core')
+    def do_sub_times(self, data):
+        try:
+            consumer_id = data.get('userid')
+            store_id = data.get('store_id')
+
+            training_times = data.get('training_times')
+            eyesight_id = data.get('eyesight_id', None)
+            device_id = data.get('device_id', None)
+
+            self.db.start()
+            sql = "select channel_id from stores where id=%d" % store_id
+            dbret = self.db.get(sql)
+            if not dbret:
+                self.db.rollback()
+                return UYU_OP_ERR
+
+            channel_id = dbret.get('channel_id')
+
+            sql = "select * from consumer where userid=%d and store_id=%d" % (consumer_id, store_id)
+            dbret = self.db.get(sql)
+            if not dbret:
+                self.db.rollback()
+                return UYU_OP_ERR
+
+            now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+            value = {
+                'channel_id': channel_id,
+                'store_id': store_id,
+                'consumer_id': consumer_id,
+                'comsumer_nums': training_times,
+                'ctime': now
+            }
+            if eyesight_id:
+                value['eyesight_id'] = eyesight_id
+            if device_id:
+                value['device_id'] = device_id
+            ret = self.db.insert(table='training_use_record', values=value)
+
+            sql = "update consumer set remain_times=remain_times-%d, uptime_time='%s' where userid=%d and store_id=%s and remain_times>=%d" % (training_times, now, consumer_id, store_id, training_times)
+            ret = self.db.execute(sql)
+            if ret == 0:
+                self.db.rollback()
+                return UYU_OP_ERR
+            else:
+                self.db.commit()
+                return UYU_OP_OK
+        except:
+            self.db.rollback()
+            log.warn(traceback.format_exc())
+            return UYU_OP_ERR

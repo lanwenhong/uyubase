@@ -144,6 +144,25 @@ class UUser:
         self.userid = self.db.last_insert_id()
 
 
+    #内部用户注册
+    @with_database('uyu_core')
+    def internal_user_register(self, udata):
+        mobile = udata.pop('mobile')
+        sql_value = self.__gen_vsql(self.ukey, udata)
+        ret = self.db.select_one(table='auth_user', fields='*', where={'phone_num': mobile})
+        if ret:
+            return False, None
+        password = udata['password']
+        sql_value['login_name'] = mobile
+        sql_value['phone_num'] = mobile
+        md5_password = hashlib.md5(password).hexdigest()
+        sql_value["password"] = gen_passwd(md5_password)
+        sql_value["state"] = define.UYU_USER_STATE_OK
+        sql_value["ctime"] = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        self.db.insert("auth_user", sql_value)
+        return True, self.db.last_insert_id()
+
+
     @with_database('uyu_core')
     def load_user_by_mobile(self, mobile):
         record = self.db.select_one("auth_user", {"phone_num": mobile})
