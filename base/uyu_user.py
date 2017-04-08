@@ -10,7 +10,7 @@ import hashlib
 
 from uyubase.base.response import success, error, UAURET
 from uyubase.uyu import define
-from uyubase.uyu.define import UYU_OP_OK, UYU_OP_ERR
+from uyubase.uyu.define import UYU_OP_OK, UYU_OP_ERR, UYU_SYS_ROLE_STORE
 
 import logging, datetime
 log = logging.getLogger()
@@ -433,12 +433,17 @@ class UUser:
                 if record.get(key, None):
                     self.udata[key] = record[key]
             len_password = len(self.udata['password'])
-            if len_password == 128 and old_password:
-                if self._check_permission(self.udata['user_type'], sys_role) and check_old_password(old_password, self.udata["password"]):
-                    self.login = True
+            if sys_role == UYU_SYS_ROLE_STORE:
+                if len_password == 128 and old_password:
+                    if self._check_permission(self.udata['user_type'], sys_role) and check_old_password(old_password, self.udata["password"]):
+                        self.login = True
+                else:
+                    if self._check_permission(self.udata['user_type'], sys_role) and check_password(password, self.udata["password"]):
+                        self.login = True
             else:
                 if self._check_permission(self.udata['user_type'], sys_role) and check_password(password, self.udata["password"]):
                     self.login = True
+
 
 
     @with_database('uyu_core')
