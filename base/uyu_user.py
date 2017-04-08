@@ -59,6 +59,12 @@ def check_password(raw_password, enc_password):
     return constant_time_compare(hsh, get_hexdigest(algo, salt, raw_password))
 
 
+def check_old_password(raw_password, enc_password):
+    hsh = hashlib.sha512(raw_password).hexdigest()
+    log.debug('verify pass has=%s, enc=%s', hsh, enc_password)
+    return constant_time_compare(hsh, enc_password)
+
+
 class VCode:
     def __init__(self):
         pass
@@ -418,7 +424,7 @@ class UUser:
         return True
 
     @with_database('uyu_core')
-    def check_userlogin(self, mobile, password, sys_role):
+    def check_userlogin(self, mobile, password, sys_role, old_password=None):
         record = self.db.select_one("auth_user", {"phone_num": mobile, "state": define.UYU_USER_STATE_OK})
         log.debug("get record: %s", record)
         if record:
@@ -426,8 +432,14 @@ class UUser:
                 log.debug(key)
                 if record.get(key, None):
                     self.udata[key] = record[key]
-            if self._check_permission(self.udata['user_type'], sys_role) and check_password(password, self.udata["password"]):
-                self.login = True
+            len_password = len(self.udata['password'])
+            if len_password == 128 and old_password:
+                if self._check_permission(self.udata['user_type'], sys_role) and check_old_password(old_password, self.udata["password"]):
+                    self.login = True
+            else:
+                if self._check_permission(self.udata['user_type'], sys_role) and check_password(password, self.udata["password"]):
+                    self.login = True
+
 
     @with_database('uyu_core')
     def change_password(self, mobile, vcode, password):
