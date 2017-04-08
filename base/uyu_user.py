@@ -120,7 +120,7 @@ class UUser:
             "userid", "channel_id", "store_type", "store_contacter",
             "store_mobile", "store_addr", "training_amt_per", "divide_percent",
             "remain_times", "is_valid", "ctime", "utime",
-            "store_name",
+            "store_name", "is_prepayment",
         ]
 
     def __gen_vsql(self, klist, cdata):
