@@ -334,7 +334,7 @@ class UUser:
     def store_bind_eyesight(self, userid, store_id, chan_id):
         try:
 
-            where = {"eyesight_id": userid, "store_id": store_id, "channel_id": chan_id}
+            where = {"eyesight_id": userid}
             ret = self.db.select_one(table='store_eyesight_bind', fields='*', where=where)
             now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             if not ret:
@@ -345,15 +345,27 @@ class UUser:
                 return True, UAURET.OK
             else:
                 is_valid = ret.get('is_valid')
-                if is_valid == define.UYU_STORE_EYESIGHT_BIND:
+                record_id = ret.get('id')
+                record_store_id = ret.get('store_id')
+                record_channel_id = ret.get('channel_id')
+
+                if is_valid == define.UYU_STORE_EYESIGHT_BIND :
                     return False, UAURET.DATAEXIST
                 else:
-                    self.db.update(
-                        table='store_eyesight_bind',
-                        values={'is_valid': define.UYU_STORE_EYESIGHT_BIND, 'utime': now},
-                        where={'eyesight_id': userid, 'store_id': store_id, 'channel_id': chan_id}
-                    )
-                    return True, UAURET.OK
+                    if record_store_id == store_id and record_channel_id == chan_id:
+                        self.db.update(
+                            table='store_eyesight_bind',
+                            values={'is_valid': define.UYU_STORE_EYESIGHT_BIND, 'utime': now},
+                            where={'eyesight_id': userid, 'store_id': store_id, 'channel_id': chan_id}
+                        )
+                        return True, UAURET.OK
+                    else:
+                        self.db.update(
+                            table='store_eyesight_bind',
+                            values={'is_valid': define.UYU_STORE_EYESIGHT_BIND, 'ctime': now, 'utime': now, 'store_id': store_id, 'channel_id': chan_id},
+                            where={'id': record_id, 'eyesight_id': userid}
+                        )
+                        return True, UAURET.OK
 
         except Exception as e:
             log.warn(e)
