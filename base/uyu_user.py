@@ -500,6 +500,20 @@ class UUser:
             raise
 
     @with_database('uyu_core')
+    def edit_device(self, serial_number, device_name, hd_version, blooth_tag, status, scm_tag=None):
+        try:
+            where = {'id': serial_number}
+            values = {'device_name': device_name, 'hd_version': hd_version, 'blooth_tag': blooth_tag, 'status': status}
+            if scm_tag:
+                values.update({'scm_tag': scm_tag})
+            ret = self.db.update(table='device', values=values, where=where)
+            log.debug('edit_device values:%s, where: %s, ret: %s', values, where, ret)
+        except Exception as e:
+            log.warn(e)
+            log.warn(traceback.format_exc())
+            raise
+
+    @with_database('uyu_core')
     def allocate_device(self, channel_id, store_id, serial_number):
         try:
             where = {'id': serial_number}
