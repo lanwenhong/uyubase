@@ -197,7 +197,7 @@ class TrainingOP:
             ret = conn.execute(sql)
 
             if ret != 2:
-                log.wanr("create order_no error")
+                log.warn("create order_no error")
                 raise ValueError, "order_no counter error"
             c_id = "%08d" % (conn.last_insert_id() % 100000000)
             order_no = datetime.datetime.now().strftime("%Y%m%d") + c_id
