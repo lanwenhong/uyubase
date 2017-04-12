@@ -7,7 +7,7 @@ import traceback
 
 import string
 import hashlib
-
+import base64
 from uyubase.base.response import success, error, UAURET
 from uyubase.uyu import define
 from uyubase.uyu.define import UYU_OP_OK, UYU_OP_ERR, UYU_SYS_ROLE_STORE
@@ -28,6 +28,13 @@ def gen_passwd(password):
     deal_passwd=hashlib.sha1(pre+password).hexdigest()
     finish_passwd='sha1$'+pre+'$'+deal_passwd
     return finish_passwd
+
+
+def gen_old_password(origin_password):
+    password_plus = '360'+origin_password+'Huyan'
+    client_password = base64.b64encode(hashlib.sha512(password_plus).digest())
+    enc_password = hashlib.sha512(client_password).hexdigest()
+    return enc_password
 
 
 def constant_time_compare(val1, val2):
@@ -167,6 +174,15 @@ class UUser:
         sql_value["ctime"] = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         self.db.insert("auth_user", sql_value)
         return True, self.db.last_insert_id()
+
+
+    @with_database('uyu_old')
+    def record_optometrists(self, data):
+        try:
+            self.db.insert(table='optometrists', values=data)
+        except Exception as e:
+            log.warn('record_optometrists error vlaues=%s', data)
+            raise
 
 
     @with_database('uyu_core')
