@@ -518,8 +518,15 @@ class UUser:
     @with_database('uyu_core')
     def edit_device(self, serial_number, device_name, hd_version, blooth_tag, status, scm_tag=None):
         try:
+            now = datetime.datetime.now()
             where = {'id': serial_number}
-            values = {'device_name': device_name, 'hd_version': hd_version, 'blooth_tag': blooth_tag, 'status': status}
+            values = {
+                'device_name': device_name,
+                'hd_version': hd_version,
+                'blooth_tag': blooth_tag,
+                'status': status,
+                'utime': now
+            }
             if scm_tag:
                 values.update({'scm_tag': scm_tag})
             ret = self.db.update(table='device', values=values, where=where)
@@ -532,8 +539,9 @@ class UUser:
     @with_database('uyu_core')
     def allocate_device(self, channel_id, store_id, serial_number):
         try:
+            now = datetime.datetime.now()
             where = {'id': serial_number}
-            values = {'channel_id': channel_id}
+            values = {'channel_id': channel_id, 'utime': now}
             # if store_id:
             values.update({'store_id': store_id})
             ret = self.db.update(table='device', values=values, where=where)
