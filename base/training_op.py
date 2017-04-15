@@ -524,17 +524,17 @@ class ConsumerTimesChange:
 
             channel_id = dbret.get('channel_id')
 
-            sql = "select * from consumer where userid=%d and store_id=%d" % (consumer_id, store_id)
-            dbret = self.db.get(sql)
-            if not dbret:
-                self.db.rollback()
-                return UYU_OP_ERR
+            # sql = "select * from consumer where userid=%d and store_id=%d" % (consumer_id, store_id)
+            # dbret = self.db.get(sql)
+            # if not dbret:
+            #     self.db.rollback()
+            #     return UYU_OP_ERR
 
             now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
             value = {
                 'channel_id': channel_id,
-                'store_id': store_id,
+                # 'store_id': store_id,
                 'consumer_id': consumer_id,
                 'comsumer_nums': training_times,
                 'ctime': now
@@ -543,16 +543,35 @@ class ConsumerTimesChange:
                 value['eyesight_id'] = eyesight_id
             if device_id:
                 value['device_id'] = device_id
-            ret = self.db.insert(table='training_use_record', values=value)
+            # ret = self.db.insert(table='training_use_record', values=value)
 
-            sql = "update consumer set remain_times=remain_times-%d, uptime_time='%s' where userid=%d and store_id=%s and remain_times>=%d" % (training_times, now, consumer_id, store_id, training_times)
-            ret = self.db.execute(sql)
-            if ret == 0:
-                self.db.rollback()
-                return UYU_OP_ERR
+            sql = "update consumer set remain_times=remain_times-%d, uptime_time='%s' where userid=%d and store_id=%s and remain_times>=%d" % (training_times, now, consumer_id, 0, training_times)
+            default_ret = self.db.execute(sql)
+            if  default_ret == 0:
+                sql = "update consumer set remain_times=remain_times-%d, uptime_time='%s' where userid=%d and store_id=%s and remain_times>=%d" % (training_times, now, consumer_id, store_id, training_times)
+                ret = self.db.execute(sql)
+                if ret == 0:
+                    self.db.rollback()
+                    return UYU_OP_ERR
+                else:
+                    value.update({'store_id': store_id})
+                    ret = self.db.insert(table='training_use_record', values=value)
+                    if ret == 1:
+                        self.db.commit()
+                        return UYU_OP_OK
+                    else:
+                        self.db.rollback()
+                        return UYU_OP_ERR
+
             else:
-                self.db.commit()
-                return UYU_OP_OK
+                value.update({'store_id': 0})
+                ret = self.db.insert(table='training_use_record', values=value)
+                if ret == 1:
+                    self.db.commit()
+                    return UYU_OP_OK
+                else:
+                    self.db.rollback()
+                    return UYU_OP_ERR
         except:
             self.db.rollback()
             log.warn(traceback.format_exc())
