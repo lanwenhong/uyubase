@@ -575,7 +575,7 @@ class UUser:
             now = datetime.datetime.now()
             where = {'id': serial_number}
             values = {'channel_id': channel_id, 'utime': now}
-            if store_id != '':
+            if store_id not in ['', None]:
                 values.update({'store_id': store_id})
             ret = self.db.update(table='device', values=values, where=where)
             log.debug('allocate_device values:%s, where: %s, ret: %s', values, where, ret)
