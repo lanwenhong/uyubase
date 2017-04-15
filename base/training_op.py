@@ -396,7 +396,7 @@ class TrainingOP:
                 'channel_id': channel_id,
                 'store_id': store_id,
                 'consumer_id': userid,
-                'consumer_nums': training_times,
+                'comsumer_nums': training_times,
                 'status': 0,
                 'ctime': now,
                 'utime': now,
