@@ -175,6 +175,39 @@ class UUser:
         self.db.insert("auth_user", sql_value)
         return True, self.db.last_insert_id()
 
+    @with_database('uyu_core')
+    def internal_user_register_with_consumer(self, udata, store_id):
+        try:
+            self.db.start()
+            now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            mobile = udata.pop('mobile')
+            sql_value = self.__gen_vsql(self.ukey, udata)
+            ret = self.db.select_one(table='auth_user', fields='*', where={'phone_num': mobile})
+            if ret:
+                return False, None
+            password = udata['password']
+            sql_value['login_name'] = mobile
+            sql_value['phone_num'] = mobile
+            md5_password = hashlib.md5(password).hexdigest()
+            sql_value["password"] = gen_passwd(md5_password)
+            sql_value["state"] = define.UYU_USER_STATE_OK
+            sql_value["ctime"] = now
+            self.db.insert("auth_user", sql_value)
+            userid = self.db.last_insert_id()
+            consumer_value = {
+                'userid': userid,
+                'remain_times': 0,
+                'create_time': now,
+                'uptime_time': now,
+                'store_id': store_id,
+            }
+            self.db.insert(table='consumer', values=consumer_value)
+            self.db.commit()
+            return True, userid
+        except:
+            self.db.rollback()
+            return False, None
+
 
     @with_database('uyu_old')
     def record_optometrists(self, data):
@@ -542,8 +575,8 @@ class UUser:
             now = datetime.datetime.now()
             where = {'id': serial_number}
             values = {'channel_id': channel_id, 'utime': now}
-            # if store_id:
-            values.update({'store_id': store_id})
+            if store_id != '':
+                values.update({'store_id': store_id})
             ret = self.db.update(table='device', values=values, where=where)
             log.debug('allocate_device values:%s, where: %s, ret: %s', values, where, ret)
         except Exception as e:

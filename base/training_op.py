@@ -353,6 +353,7 @@ class TrainingOP:
     def create_store_allot_to_consumer_order(self):
         store_id = self.cdata["store_id"]
         userid = self.cdata["consumer_id"]
+        channel_id = self.cdata["channel_id"]
         now = datetime.datetime.now()
         try:
             sql_value = self.__gen_vsql(UYU_ORDER_STATUS_SUCC)
@@ -390,6 +391,22 @@ class TrainingOP:
                 if ret != 1:
                     self.db.rollback()
                     return UYU_OP_ERR
+
+            use_value = {
+                'channel_id': channel_id,
+                'store_id': store_id,
+                'consumer_id': userid,
+                'consumer_nums': training_times,
+                'status': 0,
+                'ctime': now,
+                'utime': now,
+            }
+
+            ret = self.db.insert(table='training_use_record', values=use_value)
+            if ret != 1:
+                self.db.rollback()
+                return UYU_OP_ERR
+
 
             self.db.commit()
             return UYU_OP_OK
@@ -536,7 +553,7 @@ class ConsumerTimesChange:
                 'channel_id': channel_id,
                 # 'store_id': store_id,
                 'consumer_id': consumer_id,
-                'comsumer_nums': training_times,
+                'comsumer_nums': training_times * -1,
                 'ctime': now
             }
             if eyesight_id:
