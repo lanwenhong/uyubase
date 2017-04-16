@@ -354,6 +354,8 @@ class TrainingOP:
         store_id = self.cdata["store_id"]
         userid = self.cdata["consumer_id"]
         channel_id = self.cdata["channel_id"]
+        ret = self.db.select_one(table='stores', fields='is_prepayment', where={'id': store_id})
+        is_prepayment = ret.get('is_prepayment')
         now = datetime.datetime.now()
         try:
             sql_value = self.__gen_vsql(UYU_ORDER_STATUS_SUCC)
@@ -365,7 +367,11 @@ class TrainingOP:
             self.db.start()
             self.db.insert("training_operator_record", sql_value)
             training_times = self.cdata["training_times"]
-            sql = "update stores set remain_times=remain_times-%d, utime='%s' where id=%d and remain_times>%d" % (training_times, now, store_id, training_times)
+            if is_prepayment == define.UYU_STORE_PREPAY_TYPE:
+                sql = "update stores set remain_times=remain_times-%d, utime='%s' where id=%d and remain_times>%d" % (training_times, now, store_id, training_times)
+            else:
+                sql = "update stores set remain_times=remain_times-%d, utime='%s' where id=%d" % (training_times, now, store_id)
+
             ret = self.db.execute(sql)
             if ret == 0:
                 self.db.rollback()
@@ -435,6 +441,8 @@ class TrainingOP:
     @with_database('uyu_core')
     def create_chan_allot_to_store_order(self):
         chan_id = self.cdata["channel_id"]
+        ret = self.db.select_one(table='channel', fields='is_prepayment', where={'id': chan_id})
+        is_prepayment = ret.get('is_prepayment')
         store_id = self.cdata["store_id"]
         try:
             sql_value = self.__gen_vsql(UYU_ORDER_STATUS_SUCC)
@@ -446,6 +454,9 @@ class TrainingOP:
             self.db.start()
             self.db.insert("training_operator_record", sql_value)
             training_times = self.cdata["training_times"]
+            if is_prepayment == define.UYU_CHAN_DIV_TYPE:
+                self.db.rollback()
+                return UYU_OP_ERR
             sql = "update channel set remain_times=remain_times-%d where id=%d and remain_times>=%d" % (training_times, chan_id, training_times)
             ret = self.db.execute(sql)
             if ret == 0:

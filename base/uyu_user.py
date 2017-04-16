@@ -139,7 +139,7 @@ class UUser:
     def __gen_vsql(self, klist, cdata):
         sql_value = {}
         for key in cdata:
-            if cdata.get(key, None) != None:
+            if cdata.get(key, None) not in ['', None]:
                 sql_value[key] = cdata[key]
         return sql_value
 
@@ -577,6 +577,8 @@ class UUser:
             values = {'channel_id': channel_id, 'utime': now}
             if store_id not in ['', None]:
                 values.update({'store_id': store_id})
+            else:
+                values.update({'store_id': None})
             ret = self.db.update(table='device', values=values, where=where)
             log.debug('allocate_device values:%s, where: %s, ret: %s', values, where, ret)
         except Exception as e:
