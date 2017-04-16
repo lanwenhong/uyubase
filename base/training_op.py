@@ -265,34 +265,38 @@ class TrainingOP:
 
     def __gen_buyer_seller(self, busicd, sql_value, channel_id=None, store_id=None, consumer_id=None):
         if busicd == define.BUSICD_ORG_ALLOT_TO_CHAN:
-            ch_ret = self.db.select_one(table='channel', fields='channel_name, userid', where={'id': channel_id})
+            ch_ret = self.db.select_one(table='channel', fields='channel_name, userid, is_prepayment', where={'id': channel_id})
             sql_value['buyer'] = ch_ret.get('channel_name')
             sql_value['buyer_id'] = ch_ret.get('userid')
             sql_value['seller'] = '公司'
-            sql_value['seller_id'] = 0
+            sql_value['seller_id'] = 0 
+            sql_value['chan_is_prepay'] = ch_ret.get('is_prepayment')
         elif busicd == define.BUSICD_CHAN_BUY_TRAING_TIMES:
-            ch_ret = self.db.select_one(table='channel', fields='channel_name, userid', where={'id': channel_id})
+            ch_ret = self.db.select_one(table='channel', fields='channel_name, userid, is_prepayment', where={'id': channel_id})
             sql_value['buyer'] = ch_ret.get('channel_name')
             sql_value['buyer_id'] = ch_ret.get('userid')
             sql_value['seller'] = '公司'
-            sql_value['seller_id'] = 0
+            sql_value['seller_id'] = 0 
+            sql_value['chan_is_prepay'] = ch_ret.get('is_prepayment')
         elif busicd == define.BUSICD_CHAN_ALLOT_TO_STORE:
-            ch_ret = self.db.select_one(table='channel', fields='channel_name, userid', where={'id': channel_id})
-            st_ret = self.db.select_one(table='stores', fields='store_name, userid', where={'id': store_id})
+            ch_ret = self.db.select_one(table='channel', fields='channel_name, userid, is_prepayment', where={'id': channel_id})
+            st_ret = self.db.select_one(table='stores', fields='store_name, userid, is_prepayment', where={'id': store_id})
             sql_value['buyer'] =  st_ret.get('store_name')
             sql_value['buyer_id'] = st_ret.get('userid')
             sql_value['seller'] =  ch_ret.get('channel_name')
             sql_value['seller_id'] = ch_ret.get('userid')
+            sql_value['chan_is_prepay'] = ch_ret.get('is_prepayment')
+            sql_value['store_is_prepay'] = st_ret.get('is_prepayment')
         elif busicd == define.BUSICD_CHAN_ALLOT_TO_COSUMER:
-            st_ret = self.db.select_one(table='stores', fields='store_name, userid', where={'id': store_id})
+            st_ret = self.db.select_one(table='stores', fields='store_name, userid, is_prepayment', where={'id': store_id})
             at_ret = self.db.select_one(table='auth_user', fields='username', where={'id': consumer_id})
             sql_value['buyer'] = at_ret.get('username')
             sql_value['buyer_id'] = consumer_id
             sql_value['seller'] = st_ret.get('store_name')
             sql_value['seller_id'] = st_ret.get('userid')
+            sql_value['store_is_prepay'] = st_ret.get('is_prepayment')
         else:
-            pass
-
+            pass  
 
     #公司分配给渠道训练次数的订单
     @with_database('uyu_core')
@@ -303,6 +307,7 @@ class TrainingOP:
             sql_value = self.__gen_vsql(UYU_ORDER_STATUS_SUCC)
             sql_value["op_type"] = define.UYU_ORDER_TYPE_ALLOT
             sql_value["op_name"] = self.suser.get("username", "")
+            sql_value["op_id"] = self.suser.get("id", "")
             self.__gen_buyer_seller(define.BUSICD_ORG_ALLOT_TO_CHAN, sql_value, chan_id)
 
             self.db.start()
@@ -331,6 +336,7 @@ class TrainingOP:
 
             sql_value["op_type"] = define.UYU_ORDER_TYPE_ALLOT
             sql_value["op_name"] = self.suser.get("username", "")
+            sql_value["op_id"] = self.suser.get("id", "")
             self.__gen_buyer_seller(define.BUSICD_CHAN_ALLOT_TO_STORE, sql_value, chan_id, store_id)
             self.db.start()
             self.db.insert("training_operator_record", sql_value)
@@ -361,6 +367,7 @@ class TrainingOP:
             sql_value = self.__gen_vsql(UYU_ORDER_STATUS_SUCC)
             sql_value["op_type"] = define.UYU_ORDER_TYPE_ALLOT
             sql_value["op_name"] = self.suser.get("username", "")
+            sql_value["op_id"] = self.suser.get("id", "")
             self.__gen_buyer_seller(define.BUSICD_CHAN_ALLOT_TO_COSUMER, sql_value, store_id=store_id, consumer_id=userid)
 
             log.debug("=====sql_value: %s", sql_value)
@@ -429,6 +436,7 @@ class TrainingOP:
 
             sql_value["op_type"] = define.UYU_ORDER_TYPE_BUY
             sql_value["op_name"] = self.suser.get("username", "")
+            sql_value["op_id"] = self.suser.get("id", "")
             self.__gen_buyer_seller(define.BUSICD_CHAN_BUY_TRAING_TIMES, sql_value, chan_id)
 
             self.db.insert("training_operator_record", sql_value)
@@ -449,6 +457,7 @@ class TrainingOP:
 
             sql_value["op_type"] = define.UYU_ORDER_TYPE_ALLOT
             sql_value["op_name"] = self.suser.get("username", "")
+            sql_value["op_id"] = self.suser.get("id", "")
             self.__gen_buyer_seller(define.BUSICD_CHAN_ALLOT_TO_STORE, sql_value, chan_id, store_id)
             log.debug("=====sql_value: %s", sql_value)
             self.db.start()
