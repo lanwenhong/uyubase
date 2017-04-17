@@ -100,14 +100,15 @@ class SUser:
         ret = self.db.get(sql)
         self.udata = ret
 
-    #load 渠道用户，门店用户的档案数据
+    #load 渠道用户，门店用户，医院用户的档案数据
     @dbpool.with_database("uyu_core")
     def load_profile(self):
         if not self.udata:
             return
         user_type = self.udata.get("user_type", -1)
-        #门店和渠道才有profile信息
-        if user_type != define.UYU_USER_ROLE_CHAN and user_type != define.UYU_USER_ROLE_STORE:
+        #门店，医院和渠道才有profile信息
+        # if user_type != define.UYU_USER_ROLE_CHAN and user_type != define.UYU_USER_ROLE_STORE:
+        if user_type not in [define.UYU_USER_ROLE_CHAN, define.UYU_USER_ROLE_STORE, define.UYU_USER_ROLE_HOSPITAL]:
             return
         sql = "select * from profile where userid=%d" % self.userid
         self.pdata= self.db.get(sql)
@@ -117,9 +118,8 @@ class SUser:
         if not self.udata or not self.pdata:
             return
         user_type = self.udata.get("user_type", -1)
-
-        user_type == self.udata.get("user_type", -1)
-        if user_type != define.UYU_USER_ROLE_STORE:
+        #if user_type != define.UYU_USER_ROLE_STORE:
+        if user_type not in [define.UYU_USER_ROLE_STORE, define.UYU_USER_ROLE_HOSPITAL]:
             return
         sql = "select * from stores where userid=%d" % self.userid
         self.sdata = self.db.get(sql)
