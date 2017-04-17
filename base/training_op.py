@@ -317,9 +317,9 @@ class TrainingOP:
             self.db.insert("training_operator_record", sql_value)
             training_times = self.cdata["training_times"]
 
-            if is_prepayment == define.UYU_CHAN_DIV_TYPE:
-                self.db.rollback()
-                return UYU_OP_ERR
+            # if is_prepayment == define.UYU_CHAN_DIV_TYPE:
+            #     self.db.rollback()
+            #     return UYU_OP_ERR
 
             sql = "update channel set remain_times=remain_times+%d where id=%d" % (training_times, chan_id)
             ret = self.db.execute(sql)
