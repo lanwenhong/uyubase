@@ -269,14 +269,14 @@ class TrainingOP:
             sql_value['buyer'] = ch_ret.get('channel_name')
             sql_value['buyer_id'] = ch_ret.get('userid')
             sql_value['seller'] = '公司'
-            sql_value['seller_id'] = 0 
+            sql_value['seller_id'] = 0
             sql_value['chan_is_prepay'] = ch_ret.get('is_prepayment')
         elif busicd == define.BUSICD_CHAN_BUY_TRAING_TIMES:
             ch_ret = self.db.select_one(table='channel', fields='channel_name, userid, is_prepayment', where={'id': channel_id})
             sql_value['buyer'] = ch_ret.get('channel_name')
             sql_value['buyer_id'] = ch_ret.get('userid')
             sql_value['seller'] = '公司'
-            sql_value['seller_id'] = 0 
+            sql_value['seller_id'] = 0
             sql_value['chan_is_prepay'] = ch_ret.get('is_prepayment')
         elif busicd == define.BUSICD_CHAN_ALLOT_TO_STORE:
             ch_ret = self.db.select_one(table='channel', fields='channel_name, userid, is_prepayment', where={'id': channel_id})
@@ -296,13 +296,16 @@ class TrainingOP:
             sql_value['seller_id'] = st_ret.get('userid')
             sql_value['store_is_prepay'] = st_ret.get('is_prepayment')
         else:
-            pass  
+            pass
 
     #公司分配给渠道训练次数的订单
     @with_database('uyu_core')
     def create_org_allot_to_chan_order(self):
         chan_id = self.cdata["channel_id"]
         log.debug("chan_id: %d", chan_id)
+        ret = self.db.select_one(table='channel', fields='is_prepayment', where={'id': chan_id})
+        is_prepayment = ret.get('is_prepayment')
+
         try:
             sql_value = self.__gen_vsql(UYU_ORDER_STATUS_SUCC)
             sql_value["op_type"] = define.UYU_ORDER_TYPE_ALLOT
@@ -313,6 +316,11 @@ class TrainingOP:
             self.db.start()
             self.db.insert("training_operator_record", sql_value)
             training_times = self.cdata["training_times"]
+
+            if is_prepayment == define.UYU_CHAN_DIV_TYPE:
+                self.db.rollback()
+                return UYU_OP_ERR
+
             sql = "update channel set remain_times=remain_times+%d where id=%d" % (training_times, chan_id)
             ret = self.db.execute(sql)
             if ret == 0:
@@ -431,6 +439,11 @@ class TrainingOP:
     @with_database('uyu_core')
     def create_chan_buy_trainings_order(self):
         chan_id = self.cdata["channel_id"]
+        log.debug("chan_id: %d", chan_id)
+        ret = self.db.select_one(table='channel', fields='is_prepayment', where={'id': chan_id})
+        is_prepayment = ret.get('is_prepayment')
+        if is_prepayment == define.UYU_CHAN_DIV_TYPE:
+            return UYU_OP_ERR
         try:
             sql_value = self.__gen_vsql(UYU_ORDER_STATUS_NEED_CONFIRM)
 
