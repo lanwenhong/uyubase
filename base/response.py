@@ -34,6 +34,8 @@ class UAURET:
     ORDERERR            = "1005"
     BUSICEERR           = "1006"
     BALANCEERR          = "1007"
+    STOREERR1           = "1008"
+
 
 error_map = {
     UAURET.OK                    : u"成功",
@@ -62,6 +64,7 @@ error_map = {
     UAURET.ORDERERR              : u"订单操作失败",
     UAURET.BUSICEERR             : u"订单类型错误",
     UAURET.BALANCEERR            : u"训练次数余额不足",
+    UAURET.STOREERR1             : u"渠道和门店模式不一致",
 }
 
 def json_default_trans(obj):
