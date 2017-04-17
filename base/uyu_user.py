@@ -228,6 +228,18 @@ class UUser:
                     self.udata[key] = record[key]
             self.udata["userid"] = record["id"]
 
+
+    @with_database('uyu_core')
+    def load_user_by_login_name(self, login_name):
+        record = self.db.select_one("auth_user", {"login_name": login_name})
+        log.debug('#record: %s', record)
+        if record:
+            for key in self.ukey:
+                if record.get(key, None):
+                    self.udata[key] = record[key]
+            self.udata["userid"] = record["id"]
+
+
     def __gen_base_user_sql(self, role, udata):
             sql_value = self.__gen_vsql(self.ukey, udata)
             sql_value["ctime"] = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
