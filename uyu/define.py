@@ -200,3 +200,6 @@ UYU_RULES_STATUS_MAP = {
     UYU_RULES_STATUS_OPEN: '启用',
     UYU_RULES_STATUS_CLOSE: '关闭',
 }
+
+# 内部接口注册消费者同时赠送的次数
+UYU_FREE_TRAINING_TIMES = 3

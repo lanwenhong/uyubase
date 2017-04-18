@@ -196,7 +196,7 @@ class UUser:
             userid = self.db.last_insert_id()
             consumer_value = {
                 'userid': userid,
-                'remain_times': 0,
+                'remain_times': define.UYU_FREE_TRAINING_TIMES,
                 'create_time': now,
                 'uptime_time': now,
                 'store_id': store_id,
