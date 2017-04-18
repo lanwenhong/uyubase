@@ -212,8 +212,16 @@ class UUser:
     @with_database('uyu_old')
     def record_optometrists(self, data):
         try:
+            self.db.start()
+            log.debug('record_optometrists data=%s', data)
             self.db.insert(table='optometrists', values=data)
+            for key in ['optometrist_type', 'recommend_code']:
+                data.pop(key)
+            data['create_date'] = data['created_at']
+            self.db.insert(table='uyu_users', values=data)
+            self.db.commit()
         except Exception as e:
+            self.db.rollback()
             log.warn('record_optometrists error vlaues=%s', data)
             raise
 
