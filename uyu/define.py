@@ -30,6 +30,15 @@ UYU_USER_ROLE_EYESIGHT = 5
 UYU_USER_ROLE_SUPER    = 6
 #消费者
 UYU_USER_ROLE_COMSUMER = 7
+#系统角色
+UYU_USER_ROLE_MAP = {
+    UYU_USER_ROLE_BAS: '基础用户',
+    UYU_USER_ROLE_CHAN: '渠道用户',
+    UYU_USER_ROLE_STORE: '门店用户',
+    UYU_USER_ROLE_HOSPITAL: '医院用户',
+    UYU_USER_ROLE_SUPER: '管理员',
+    UYU_USER_ROLE_COMSUMER: '消费者',
+}
 
 #用户状态
 #正常
