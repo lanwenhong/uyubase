@@ -232,7 +232,7 @@ class UUser:
         log.debug('#record: %s', record)
         if record:
             for key in self.ukey:
-                if record.get(key, None):
+                if record.get(key, None) not in ['', None]:
                     self.udata[key] = record[key]
             self.udata["userid"] = record["id"]
 
@@ -243,7 +243,7 @@ class UUser:
         log.debug('#record: %s', record)
         if record:
             for key in self.ukey:
-                if record.get(key, None):
+                if record.get(key, None) not in ['', None]:
                     self.udata[key] = record[key]
             self.udata["userid"] = record["id"]
 
@@ -402,11 +402,20 @@ class UUser:
     @with_database("uyu_core")
     def store_bind_eyesight(self, userid, store_id, chan_id):
         try:
+            # 如果这个userid是个消费者,角色改为视光师
+            user_where = {'id': userid, 'user_type': ('in', (define.UYU_USER_ROLE_EYESIGHT, define.UYU_USER_ROLE_COMSUMER))}
+            user_ret = self.db.select_one(table='auth_user', fields='*', where=user_where)
+            if not user_ret:
+                log.debug('userid=%s is not consumer or eyesight', userid)
+                return False, UAURET.NODATA
+            user_type = user_ret.get('user_type')
 
             where = {"eyesight_id": userid}
             ret = self.db.select_one(table='store_eyesight_bind', fields='*', where=where)
             now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             if not ret:
+                if user_type == define.UYU_USER_ROLE_COMSUMER:
+                    self.db.update(table='auth_user', values={'user_type': define.UYU_USER_ROLE_EYESIGHT}, where={'id': userid})
                 sql_value = {"eyesight_id": userid, "store_id": store_id, "channel_id": chan_id, 'is_valid': define.UYU_STORE_EYESIGHT_BIND}
                 sql_value['ctime'] = now
                 sql_value['utime'] = now
