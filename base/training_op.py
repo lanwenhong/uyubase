@@ -252,7 +252,7 @@ class TrainingOP:
         log.debug("order_no: %s", order_no)
 
         for key in self.data_key:
-            if self.cdata.get(key, None):
+            if self.cdata.get(key, None) not in ['', None]:
                 sql_value[key] = self.cdata[key]
 
         sql_value["orderno"] = order_no
