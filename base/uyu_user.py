@@ -166,10 +166,13 @@ class UUser:
         if ret:
             return False, None
         password = udata['password']
+        if len(password) == 128:
+            sql_value["password"] = password
+        else:
+            md5_password = hashlib.md5(password).hexdigest()
+            sql_value["password"] = gen_passwd(md5_password)
         sql_value['login_name'] = mobile
         sql_value['phone_num'] = mobile
-        md5_password = hashlib.md5(password).hexdigest()
-        sql_value["password"] = gen_passwd(md5_password)
         sql_value["state"] = define.UYU_USER_STATE_OK
         sql_value["ctime"] = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         self.db.insert("auth_user", sql_value)
@@ -186,10 +189,13 @@ class UUser:
             if ret:
                 return False, None
             password = udata['password']
+            if len(password) == 128:
+                sql_value["password"] = password
+            else:
+                md5_password = hashlib.md5(password).hexdigest()
+                sql_value["password"] = gen_passwd(md5_password)
             sql_value['login_name'] = mobile
             sql_value['phone_num'] = mobile
-            md5_password = hashlib.md5(password).hexdigest()
-            sql_value["password"] = gen_passwd(md5_password)
             sql_value["state"] = define.UYU_USER_STATE_OK
             sql_value["ctime"] = now
             self.db.insert("auth_user", sql_value)
