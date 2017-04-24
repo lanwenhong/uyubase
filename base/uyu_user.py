@@ -570,7 +570,7 @@ class UUser:
             enc_password = gen_passwd(password)
             values = {'password': enc_password, 'utime': now}
             where = {'id': userid}
-            self.db.update(table='auth_user', values=values, where=where}
+            self.db.update(table='auth_user', values=values, where=where)
         except:
             log.warn(traceback.format_exc())
             raise
