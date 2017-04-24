@@ -560,6 +560,22 @@ class UUser:
             log.warn(traceback.format_exc())
             return UAURET.VCODEERR
 
+
+    @with_database('uyu_core')
+    def change_password_without_code(self, userid, password):
+        try:
+            now = datetime.datetime.now()
+            #password是md5后的
+            log.debug('change_password_without_code userid=%s, password=%s', userid, password)
+            enc_password = gen_passwd(password)
+            values = {'password': enc_password, 'utime': now}
+            where = {'id': userid}
+            self.db.update(table='auth_user', values=values, where=where}
+        except:
+            log.warn(traceback.format_exc())
+            raise
+
+
     @with_database('uyu_core')
     def create_device(self, device_name, hd_version, blooth_tag, scm_tag, status, channel_id, store_id=None, training_nums=None, op=None):
         try:
