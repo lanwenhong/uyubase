@@ -171,7 +171,7 @@ class UUser:
         else:
             md5_password = hashlib.md5(password).hexdigest()
             sql_value["password"] = gen_passwd(md5_password)
-        sql_value['login_name'] = mobile
+        sql_value['login_name'] = udata.get('username', '')
         sql_value['phone_num'] = mobile
         sql_value["state"] = define.UYU_USER_STATE_OK
         sql_value["ctime"] = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -194,7 +194,8 @@ class UUser:
             else:
                 md5_password = hashlib.md5(password).hexdigest()
                 sql_value["password"] = gen_passwd(md5_password)
-            sql_value['login_name'] = mobile
+            #sql_value['login_name'] = mobile
+            sql_value["login_name"] = udata.get('username', '')
             sql_value['phone_num'] = mobile
             sql_value["state"] = define.UYU_USER_STATE_OK
             sql_value["ctime"] = now
@@ -562,15 +563,42 @@ class UUser:
 
 
     @with_database('uyu_core')
-    def change_password_without_code(self, userid, password):
-        try:
-            now = datetime.datetime.now()
-            #password是md5后的
-            log.debug('change_password_without_code userid=%s, password=%s', userid, password)
-            enc_password = gen_passwd(password)
-            values = {'password': enc_password, 'utime': now}
+    def change_password_with_new(self, userid, password):
+        now = datetime.datetime.now()
+        #password是md5后的
+        log.debug('change_password_without_code userid=%s, password=%s', userid, password)
+        enc_password = gen_passwd(password)
+        values = {'password': enc_password, 'utime': now}
+        where = {'id': userid}
+        self.db.update(table='auth_user', values=values, where=where)
+
+
+    @with_database('uyu_old')
+    def change_password_with_old(self, userid, echo_password, user_type, login_name):
+        enc_password = gen_old_password(echo_password)
+        now = datetime.datetime.now()
+        if user_type == define.UYU_USER_ROLE_COMSUMER:
+            #消费者两边的id是一样的
             where = {'id': userid}
-            self.db.update(table='auth_user', values=values, where=where)
+            values = {'password': enc_password, 'updated_at': now}
+            self.db.update(table='uyu_users', values=values, where=where)
+
+        if user_type == define.UYU_USER_ROLE_EYESIGHT and userid > 30000 and userid < 40000:
+            #在3W-4W之间，写uyu_users和optometrists
+            new_userid = userid - 30000
+            where = {'id': new_userid}
+            values = {'password': enc_password, 'updated_at': now}
+            ret = self.db.update(table='optometrists', values=values, where=where)
+            log.debug('change_password_with_old  optometrists new_userid=%s, values=%s, ret=%s', new_userid, values, ret)
+            ret = self.db.update(table='uyu_users', values=values, where={'login_name': login_name})
+            log.debug('change_password_with_old uyu_uses login_name=%s, values=%s, ret=%s', login_name, values, ret)
+
+
+
+    def change_password_all(self, userid, password, echo_password, user_type, login_name):
+        try:
+            self.change_password_with_new(userid, password)
+            self.change_password_with_old(userid, echo_password, user_type, login_name)
         except:
             log.warn(traceback.format_exc())
             raise
