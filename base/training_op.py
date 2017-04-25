@@ -408,7 +408,7 @@ class TrainingOP:
                     'store_id': store_id,
                     'create_time': now,
                 }
-                ret = self.db.insert(table='consumer', values=value);
+                ret = self.db.insert(table='consumer', values=value)
                 if ret != 1:
                     self.db.rollback()
                     return UYU_OP_ERR
