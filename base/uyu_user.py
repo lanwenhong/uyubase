@@ -583,15 +583,19 @@ class UUser:
             values = {'password': enc_password, 'updated_at': now}
             self.db.update(table='uyu_users', values=values, where=where)
 
-        if user_type == define.UYU_USER_ROLE_EYESIGHT and userid > 30000 and userid < 40000:
-            #在3W-4W之间，写uyu_users和optometrists
-            new_userid = userid - 30000
+        if user_type == define.UYU_USER_ROLE_EYESIGHT:
+            if userid > 30000 and userid < 40000:
+                #在3W-4W之间，写uyu_users和optometrists
+                new_userid = userid - 30000
+            else:
+                new_userid = userid
             where = {'id': new_userid}
             values = {'password': enc_password, 'updated_at': now}
             ret = self.db.update(table='optometrists', values=values, where=where)
             log.debug('change_password_with_old  optometrists new_userid=%s, values=%s, ret=%s', new_userid, values, ret)
             ret = self.db.update(table='uyu_users', values=values, where={'login_name': login_name})
             log.debug('change_password_with_old uyu_uses login_name=%s, values=%s, ret=%s', login_name, values, ret)
+
 
 
 
