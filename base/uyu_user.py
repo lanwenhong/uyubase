@@ -583,7 +583,7 @@ class UUser:
             values = {'password': enc_password, 'updated_at': now}
             self.db.update(table='uyu_users', values=values, where=where)
 
-        if user_type == define.UYU_USER_ROLE_EYESIGHT:
+        elif user_type == define.UYU_USER_ROLE_EYESIGHT:
             if userid > 30000 and userid < 40000:
                 #在3W-4W之间，写uyu_users和optometrists
                 new_userid = userid - 30000
@@ -596,7 +596,20 @@ class UUser:
             ret = self.db.update(table='uyu_users', values=values, where={'login_name': login_name})
             log.debug('change_password_with_old uyu_uses login_name=%s, values=%s, ret=%s', login_name, values, ret)
 
+        elif user_type in (define.UYU_USER_ROLE_STORE, define.UYU_USER_ROLE_HOSPITAL):
+            if userid > 50000 and userid < 60000:
+                # 修改老系统merchants的密码
+                new_userid = userid - 50000
+                where = {'id': new_userid}
+                values = {'password': enc_password, 'updated_at': now}
+                ret = self.db.update(table='merchants', values=values, where=where)
+                log.debug('change_password_with_old merchants new_userid=%s, values=%s, ret=%s', new_userid, values, ret)
+            else:
+                # 其它的不在老系统里
+                log.debug('change_password_with_old merchants ignore userid=%s, ret=%s', userid, ret)
 
+        else:
+            log.debug('change_password_with_old ignore userid=%s, user_type=%s', userid, user_type)
 
 
     def change_password_all(self, userid, password, echo_password, user_type, login_name):
