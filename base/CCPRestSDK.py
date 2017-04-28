@@ -18,7 +18,8 @@ import json
 import logging
 from xmltojson import xmltojson
 from xml.dom import minidom
-
+import ssl
+ssl._create_default_https_context = ssl._create_unverified_context
 log = logging.getLogger()
 
 class REST(object):
