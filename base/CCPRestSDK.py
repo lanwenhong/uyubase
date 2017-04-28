@@ -15,8 +15,11 @@ import base64
 import datetime
 import urllib2
 import json
+import logging
 from xmltojson import xmltojson
 from xml.dom import minidom
+
+log = logging.getLogger()
 
 class REST(object):
 
@@ -69,13 +72,13 @@ class REST(object):
        self.AppId = AppId;
 
     def log(self,url,body,data):
-        print('这是请求的URL：')
-        print (url);
-        print('这是请求包体:')
-        print (body);
-        print('这是响应包体:')
-        print (data);
-        print('********************************')
+        log.debug('这是请求的URL：')
+        log.debug(url);
+        log.debug('这是请求包体:')
+        log.debug(body);
+        log.debug('这是响应包体:')
+        log.debug(data);
+        log.debug('********************************')
 
 
     # 创建子账号
