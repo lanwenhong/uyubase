@@ -10,6 +10,7 @@
     #  in the file PATENTS.  All contributing project authors may
     #  be found in the AUTHORS file in the root of the source tree.
 
+import sys
 import md5
 import base64
 import datetime
@@ -18,8 +19,10 @@ import json
 import logging
 from xmltojson import xmltojson
 from xml.dom import minidom
-import ssl
-ssl._create_default_https_context = ssl._create_unverified_context
+
+if sys.version_info.micro >= 9:
+    import ssl
+    ssl._create_default_https_context = ssl._create_unverified_context
 log = logging.getLogger()
 
 class REST(object):
