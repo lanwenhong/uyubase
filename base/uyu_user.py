@@ -606,7 +606,7 @@ class UUser:
                 log.debug('change_password_with_old merchants new_userid=%s, values=%s, ret=%s', new_userid, values, ret)
             else:
                 # 其它的不在老系统里
-                log.debug('change_password_with_old merchants ignore userid=%s, ret=%s', userid, ret)
+                log.debug('change_password_with_old merchants ignore userid=%s', userid)
 
         else:
             log.debug('change_password_with_old ignore userid=%s, user_type=%s', userid, user_type)

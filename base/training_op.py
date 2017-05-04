@@ -383,7 +383,7 @@ class TrainingOP:
             self.db.insert("training_operator_record", sql_value)
             training_times = self.cdata["training_times"]
             if is_prepayment == define.UYU_STORE_PREPAY_TYPE:
-                sql = "update stores set remain_times=remain_times-%d, utime='%s' where id=%d and remain_times>%d" % (training_times, now, store_id, training_times)
+                sql = "update stores set remain_times=remain_times-%d, utime='%s' where id=%d and remain_times>=%d" % (training_times, now, store_id, training_times)
             else:
                 sql = "update stores set remain_times=remain_times-%d, utime='%s' where id=%d" % (training_times, now, store_id)
 
