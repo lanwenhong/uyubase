@@ -24,6 +24,7 @@ class UAURET:
     IPERR               = "2201"
     NODATA              = "2300"
     DATAEXIST           = "2301"
+    PHONENUMEXIST       = "2302"
     UNKOWNERR           = "2400"
     SERVERERR           = "2600"
     METHODERR           = "2601"
@@ -67,6 +68,7 @@ error_map = {
     UAURET.BALANCEERR            : u"训练次数余额不足",
     UAURET.STOREERR1             : u"渠道和门店模式不一致",
     UAURET.USERNOTEXISTS         : u"用户不存在",
+    UAURET.PHONENUMEXIST         : u"手机号已经存在",
 }
 
 def json_default_trans(obj):
