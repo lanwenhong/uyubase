@@ -19,6 +19,7 @@ class UAURET:
     USERERR             = "2102"
     ROLEERR             = "2103"
     PWDERR              = "2104"
+    USERNOTEXISTS       = "2105"
     REQERR              = "2200"
     IPERR               = "2201"
     NODATA              = "2300"
@@ -65,6 +66,7 @@ error_map = {
     UAURET.BUSICEERR             : u"订单类型错误",
     UAURET.BALANCEERR            : u"训练次数余额不足",
     UAURET.STOREERR1             : u"渠道和门店模式不一致",
+    UAURET.USERNOTEXISTS         : u"用户不存在",
 }
 
 def json_default_trans(obj):
