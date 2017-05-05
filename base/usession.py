@@ -34,6 +34,10 @@ class USession:
         client.set(self.sk, json.dumps(svalue))
         client.expire(self.sk, self.c_conf["expires"])
 
+        client.rpush(svalue["userid"], self.sk)
+        if svalue.get("login_id", None):
+            client.rpush(svalue["login_id"], self.sk)
+
     def get_session(self):
         client = redis.StrictRedis(connection_pool=self.redis_pool)
         v = client.get(self.sk)
@@ -48,6 +52,19 @@ class USession:
     def rm_session(self):
         client = redis.StrictRedis(connection_pool=self.redis_pool)
         client.delete(self.sk)
+
+class KickSession:
+    def __init__(self, redis_pool, userid):
+        self.redis_pool = redis_pool
+        self.userid = userid
+
+    def kick(self):
+        client = redis.StrictRedis(connection_pool=self.redis_pool)
+        while True:
+            ret = client.lpop(userid)
+            if not ret:
+                break
+            client.delete(ret)
 
 class SUser:
     def __init__(self, userid, session, sys_role):
