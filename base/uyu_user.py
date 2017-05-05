@@ -181,13 +181,13 @@ class UUser:
     @with_database('uyu_core')
     def internal_user_register_with_consumer(self, udata, store_id):
         try:
-            self.db.start()
             now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             mobile = udata.pop('mobile')
             sql_value = self.__gen_vsql(self.ukey, udata)
             ret = self.db.select_one(table='auth_user', fields='*', where={'phone_num': mobile})
             if ret:
                 return False, None
+            self.db.start()
             password = udata['password']
             if len(password) == 128:
                 sql_value["password"] = password

@@ -169,7 +169,7 @@ class ChanAllotStoreCancel:
 
 
 class TrainingOP:
-    def __init__(self, cdata=None, suser=None, order_no=None):
+    def __init__(self, cdata=None, suser=None, order_no=None, session=None):
         self.data_key = (
             "busicd",  "channel_id", "store_id", "consumer_id",
             "category", "op_type", "pay_type", "training_times",
@@ -180,6 +180,7 @@ class TrainingOP:
         self.db_data = {}
         self.cdata = cdata
         self.suser = suser
+        self.se = session
         self.respcd = None
 
         self.order_no = order_no
@@ -374,8 +375,13 @@ class TrainingOP:
         try:
             sql_value = self.__gen_vsql(UYU_ORDER_STATUS_SUCC)
             sql_value["op_type"] = define.UYU_ORDER_TYPE_ALLOT
-            sql_value["op_name"] = self.suser.get("username", "")
-            sql_value["op_id"] = self.suser.get("id", "")
+            #sql_value["op_name"] = self.suser.get("username", "")
+            #sql_value["op_id"] = self.suser.get("id", "")
+            sql_value["op_id"] = self.se.get_session()["login_id"]
+            ret = self.db.select_one(table='auth_user', fields='username', where={'id': sql_value['op_id']})
+            sql_value['op_name'] = ret.get('username')
+
+
             self.__gen_buyer_seller(define.BUSICD_CHAN_ALLOT_TO_COSUMER, sql_value, store_id=store_id, consumer_id=userid)
 
             log.debug("=====sql_value: %s", sql_value)

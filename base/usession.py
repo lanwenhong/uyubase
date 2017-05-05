@@ -27,6 +27,8 @@ class USession:
         svalue = {}
         svalue["userid"] = value["userid"]
         svalue["user_type"] = sys_role
+        if value.get("login_id", None):
+            svalue["login_id"] = value.get("login_id")
 
         client = redis.StrictRedis(connection_pool=self.redis_pool)
         client.set(self.sk, json.dumps(svalue))
