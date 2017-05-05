@@ -460,15 +460,18 @@ class UUser:
 
     #门店解绑视光师
     @with_database("uyu_core")
-    def unbind_eyesight(self, userid, store_id, chan_id):
+    def unbind_eyesight(self, userid, store_id=None, chan_id=None):
         where = {}
         sql_value = {}
         sql_value['utime'] = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         sql_value['is_valid'] = define.UYU_STORE_EYESIGHT_UNBIND
         where['eyesight_id'] = userid
-        where['store_id'] = store_id
-        where['channel_id'] = chan_id
-        self.db.update(table='store_eyesight_bind', values=sql_value, where=where)
+        if store_id:
+            where['store_id'] = store_id
+        if chan_id:
+            where['channel_id'] = chan_id
+        ret = self.db.update(table='store_eyesight_bind', values=sql_value, where=where)
+        return ret
 
     #load用户信息
     @with_database('uyu_core')
