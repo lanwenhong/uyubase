@@ -571,11 +571,10 @@ class ConsumerTimesChange:
             eyesight_id = data.get('eyesight_id', None)
             device_id = data.get('device_id', None)
 
-            self.db.start()
+
             sql = "select channel_id from stores where id=%d" % store_id
             dbret = self.db.get(sql)
             if not dbret:
-                self.db.rollback()
                 return UYU_OP_ERR
 
             channel_id = dbret.get('channel_id')
@@ -601,6 +600,7 @@ class ConsumerTimesChange:
                 value['device_id'] = device_id
             # ret = self.db.insert(table='training_use_record', values=value)
 
+            self.db.start()
             sql = "update consumer set remain_times=remain_times-%d, uptime_time='%s' where userid=%d and store_id=%s and remain_times>=%d" % (training_times, now, consumer_id, 0, training_times)
             default_ret = self.db.execute(sql)
             if  default_ret == 0:
@@ -620,7 +620,9 @@ class ConsumerTimesChange:
                         return UYU_OP_ERR
 
             else:
-                value.update({'store_id': 0})
+                # value.update({'store_id': 0})
+                # 记录到哪个门店减扣次数的
+                value.update({'store_id': store_id})
                 ret = self.db.insert(table='training_use_record', values=value)
                 if ret == 1:
                     self.db.commit()
