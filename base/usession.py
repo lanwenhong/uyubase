@@ -61,7 +61,7 @@ class KickSession:
     def kick(self):
         client = redis.StrictRedis(connection_pool=self.redis_pool)
         while True:
-            ret = client.lpop(userid)
+            ret = client.lpop(self.userid)
             if not ret:
                 break
             client.delete(ret)
