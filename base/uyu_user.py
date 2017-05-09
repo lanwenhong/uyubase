@@ -106,6 +106,7 @@ class UUser:
         self.pdata = {}
         self.cdata = {}
         self.sdata = {}
+        self.crdata = []
 
         self.login = False
 
@@ -135,6 +136,7 @@ class UUser:
             "remain_times", "is_valid", "ctime", "utime",
             "store_name", "is_prepayment",
         ]
+
 
     def __gen_vsql(self, klist, cdata):
         sql_value = {}
@@ -290,7 +292,7 @@ class UUser:
 
     #创建渠道事务
     @with_database('uyu_core')
-    def create_chan_transaction(self, udata, pdata, cdata):
+    def create_chan_transaction(self, udata, pdata, cdata, crdata=None):
         try:
             self.db.start()
             #创建用户基本信息
@@ -308,6 +310,17 @@ class UUser:
             sql_value = self.__gen_chan_sql(userid, cdata)
             self.db.insert("channel", sql_value)
             chnid = self.db.last_insert_id()
+
+            #添加次卡模式创建套餐关系数据
+            if crdata:
+                for rule_id in crdata:
+                    values = {
+                        'rule_id': rule_id,
+                        'channel_id': chnid,
+                        'ctime': datetime.datetime.now(),
+                        'is_valid': define.UYU_CHAN_RULE_BIND
+                    }
+                    self.db.insert(table='channel_rule_bind', values=values)
 
             self.db.commit()
             self.userid = userid
@@ -387,6 +400,40 @@ class UUser:
 
 
     @with_database('uyu_core')
+    def __update_chan_role_bind(self, userid, crdata):
+
+        log.debug('update chan role bind userid=%s, crdata=%s', userid, crdata)
+        ret = self.db.select_one(table='channel', fields='id', where={'userid': userid})
+        if not ret:
+            raise ValueError('invalid channel_userid=%s', userid)
+        channel_id = ret.get('id')
+
+        ret = self.db.select(table='channel_rule_bind', fields='rule_id', where={'channel_id': channel_id})
+        if ret:
+            rule = [item['rule_id'] for item in ret]
+        else:
+            rule = []
+
+        rule.sort()
+        crdata.sort()
+
+        if crdata and rule != crdata:
+            values = {
+                'is_valid': define.UYU_CHAN_RULE_UNBIND,
+                'utime': datetime.datetime.now()
+            }
+            self.db.update(table='channel_rule_bind', values=values, where={'channel_id': channel_id})
+            for rule_id in crdata:
+                values = {
+                    'channel_id': channel_id,
+                    'rule_id': rule_id,
+                    'is_valid': define.UYU_CHAN_RULE_BIND,
+                    'ctime': datetime.datetime.now()
+                }
+                self.db.insert(table='channel_rule_bind', values=values)
+
+
+    @with_database('uyu_core')
     def __update_store(self, userid, sdata):
         sql_value = self.__gen_vsql(self.skey, sdata)
         sql_value["utime"] = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -394,10 +441,15 @@ class UUser:
         log.debug("update store succ!!!")
 
     #更新渠道信息
-    def chan_info_change(self, userid, udata, pdata, cdata):
+    def chan_info_change(self, userid, udata, pdata, cdata, crdata):
         self.__update_user(userid, udata)
         self.__update_profile(userid, pdata)
         self.__update_chan(userid, cdata)
+        is_prepayment = cdata.get('is_prepayment')
+        if is_prepayment == define.UYU_CHAN_PREPAY_TYPE and crdata:
+            # 次卡模式有套餐的修改
+            self.__update_chan_role_bind(userid, crdata)
+
 
     #更新门店信息
     def store_info_change(self, userid, udata, pdata, sdata):
@@ -502,6 +554,11 @@ class UUser:
                     # if record.get(key, None):
                     self.cdata[key] = record[key]
                 self.cdata["chnid"] = record["id"]
+
+            ret = self.db.select(table='channel_rule_bind', fields='rule_id', where={'channel_id': self.cdata['chnid'], 'is_valid': define.UYU_CHAN_RULE_BIND})
+            if ret:
+                rule = [item['rule_id'] for item in ret]
+                self.crdata.extend(rule)
 
         if role == define.UYU_USER_ROLE_STORE:
             record = self.db.select_one("stores", {"userid": userid})
