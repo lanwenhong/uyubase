@@ -575,7 +575,8 @@ class ConsumerTimesChange:
             sql = "select channel_id from stores where id=%d" % store_id
             dbret = self.db.get(sql)
             if not dbret:
-                return UYU_OP_ERR
+                # return UYU_OP_ERR
+                return response.UAURET.ORDERERR
 
             channel_id = dbret.get('channel_id')
 
@@ -608,7 +609,7 @@ class ConsumerTimesChange:
                 ret = self.db.execute(sql)
                 if ret == 0:
                     self.db.rollback()
-                    return UYU_OP_ERR
+                    return response.UAURET.USERTIMESERR
                 else:
                     value.update({'store_id': store_id})
                     ret = self.db.insert(table='training_use_record', values=value)
@@ -617,7 +618,8 @@ class ConsumerTimesChange:
                         return UYU_OP_OK
                     else:
                         self.db.rollback()
-                        return UYU_OP_ERR
+                        # return UYU_OP_ERR
+                        return response.UAURET.ORDERERR
 
             else:
                 # value.update({'store_id': 0})
@@ -629,8 +631,10 @@ class ConsumerTimesChange:
                     return UYU_OP_OK
                 else:
                     self.db.rollback()
-                    return UYU_OP_ERR
+                    # return UYU_OP_ERR
+                    return response.UAURET.ORDERERR
         except:
             self.db.rollback()
             log.warn(traceback.format_exc())
-            return UYU_OP_ERR
+            # return UYU_OP_ERR
+            return response.UAURET.ORDERERR

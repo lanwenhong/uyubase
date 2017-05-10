@@ -39,6 +39,7 @@ class UAURET:
     STOREERR1           = "1008"
     UNBINDEYEERR        = "1009"
     STOREDEVICEERR      = "1010"
+    USERTIMESERR        = "1011"
 
 
 
@@ -74,6 +75,7 @@ error_map = {
     UAURET.PHONENUMEXIST         : u"手机号已经存在",
     UAURET.UNBINDEYEERR          : u"解绑视光师失败",
     UAURET.STOREDEVICEERR        : u"门店设备不匹配",
+    UAURET.USERTIMESERR          : u"用户训练点数不足"
 }
 
 def json_default_trans(obj):
