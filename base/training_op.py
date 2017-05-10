@@ -638,3 +638,28 @@ class ConsumerTimesChange:
             log.warn(traceback.format_exc())
             # return UYU_OP_ERR
             return response.UAURET.ORDERERR
+
+
+class OrgAllocateToUser:
+
+    def __init__(self):
+        pass
+
+
+    @with_database('uyu_core')
+    def allocate_times(self, userid, training_times):
+        try:
+            now = datetime.datetime.now()
+            sql = "update consumer set remain_times=remain_times+%d, uptime_time='%s' where userid=%d and store_id=%d" % (training_times, now, userid, 0)
+            ret = self.db.execute(sql)
+            if ret == 0:
+                values = {'remain_times': training_times, 'userid': userid, 'create_time': now, 'store_id': 0}
+                db_ret = self.db.insert(table='consumer', values=values)
+                if db_ret != 1:
+                    return response.UAURET.ORDERERR
+                return UYU_OP_OK
+            else:
+                return UYU_OP_OK
+        except:
+            log.warn(traceback.format_exc())
+            return response.UAURET.ORDERERR
