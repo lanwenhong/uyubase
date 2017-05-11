@@ -205,15 +205,18 @@ class UUser:
             sql_value["state"] = define.UYU_USER_STATE_OK
             sql_value["ctime"] = now
 
-            # self.db.insert("auth_user", sql_value)
-            # userid = self.db.last_insert_id()
+            self.db.insert("auth_user", sql_value)
+            userid = self.db.last_insert_id()
 
             params = {}
+            params['consumer_id'] = userid
             params['training_times'] = define.UYU_FREE_TRAINING_TIMES
             params['busicd'] = define.BUSICD_ORG_REGISTER_PRESENTATION
+            # 平台赠送的store_id=0
+            params['store_id'] = 0
 
             top = TrainingOP(params)
-            ret, userid = top.org_register_presentation_to_user(sql_value, store_id)
+            ret = top.org_register_presentation_to_user_order(sql_value, store_id)
             log.debug('org allocate times to mobile=%s, training_times=%d ret=%s', mobile, params['training_times'], ret)
             if ret != UYU_OP_OK:
                 return False, None

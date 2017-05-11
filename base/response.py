@@ -42,6 +42,7 @@ class UAURET:
     USERTIMESERR        = "1011"
     ORGALLOCATEROLEERR  = "1012"
     LOGINNAMEEXISTS     = "1013"
+    MODIFYUSERINFOERR   = "1014"
 
 
 
@@ -80,6 +81,7 @@ error_map = {
     UAURET.USERTIMESERR          : u"用户训练点数不足",
     UAURET.ORGALLOCATEROLEERR    : u"平台只能分配给消费者或视光师",
     UAURET.LOGINNAMEEXISTS       : u"登录名已存在",
+    UAURET.MODIFYUSERINFOERR     : u"修改用户信息失败",
 }
 
 def json_default_trans(obj):

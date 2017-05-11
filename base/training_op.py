@@ -168,6 +168,60 @@ class ChanAllotStoreCancel:
             return UYU_OP_ERR
 
 
+class OrgAllotToUserCancel:
+
+    def __init__(self, order_no):
+        self.order_no = order_no
+
+
+    @with_database('uyu_core')
+    def do_cancel(self):
+        try:
+            self.db.start()
+            sql = "select * from training_operator_record where orderno='%s' for update" % self.order_no
+            dbret = self.db.get(sql)
+            if not dbret:
+                self.db.rollback()
+                return UYU_OP_ERR
+
+            self.consumer_id = dbret.get("consumer_id", None)
+            self.cancel_times = dbret.get("training_times")
+            print 'consumer_id=', self.consumer_id, 'cancel_times=', self.cancel_times
+            ctime = dbret["create_time"]
+
+            db_day = ctime.strftime("%Y-%m-%d")
+            n_day = datetime.datetime.now().strftime("%Y-%m-%d")
+            if db_day != n_day:
+                 self.db.rollback()
+                 return UYU_OP_ERR
+
+            uptime = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            sql = "update training_operator_record set status=%d, uptime_time='%s' where orderno='%s' and status=%d" % (define.UYU_ORDER_STATUS_CANCEL,
+                    uptime,
+                    dbret["orderno"],
+                    define.UYU_ORDER_STATUS_SUCC
+                    )
+            ret = self.db.execute(sql)
+            if ret == 0:
+                self.db.rollback()
+                log.warn("update order %s fail", self.dbret["orderno"])
+                return UYU_OP_ERR
+
+            sql = "update consumer set remain_times=remain_times-%d where userid=%d and remain_times>=%d" % (self.cancel_times, self.consumer_id, self.cancel_times)
+            ret = self.db.execute(sql)
+            if ret == 0:
+                log.warn("update consumer %d fail", self.consumer_id)
+                self.db.rollback()
+                return UYU_OP_ERR
+
+            self.db.commit()
+            return UYU_OP_OK
+        except:
+            self.db.rollback()
+            log.warn(traceback.format_exc())
+            return UYU_OP_ERR
+
+
 class TrainingOP:
     def __init__(self, cdata=None, suser=None, order_no=None, session=None):
         self.data_key = (
@@ -190,6 +244,8 @@ class TrainingOP:
             define.BUSICD_CHAN_ALLOT_TO_STORE: ChanAllotStoreCancel,
             define.BUSICD_CHAN_ALLOT_TO_COSUMER: StoreToConsumerCancel,
             define.BUSICD_CHAN_BUY_TRAING_TIMES: OrgAllotToChanCancel,
+            define.BUSICD_ORG_REGISTER_PRESENTATION: OrgAllotToUserCancel,
+            define.BUSICD_ORG_PRESENTATION: OrgAllotToUserCancel,
         }
 
     def create_orderno(self):
@@ -511,7 +567,8 @@ class TrainingOP:
 
     # 注册赠送
     @with_database('uyu_core')
-    def org_register_presentation_to_user(self, user_value, store_id):
+    def org_register_presentation_to_user_order(self, user_value, store_id):
+        userid = self.cdata["consumer_id"]
         training_times = self.cdata["training_times"]
         now = datetime.datetime.now()
         try:
@@ -520,18 +577,10 @@ class TrainingOP:
             sql_value["op_name"] = '公司'
             sql_value["op_id"] = 0
 
-            self.db.start()
-
-            ret = self.db.insert("auth_user", user_value)
-            log.debug('org register presentation insert user ret=%d', ret)
-            if ret != 1:
-                self.db.rollback()
-                return response.UAURET.ORDERERR, None
-            userid = self.db.last_insert_id()
-
             self.__gen_buyer_seller(define.BUSICD_ORG_REGISTER_PRESENTATION, sql_value, consumer_id=userid)
             log.debug("====sql_value: %s", sql_value)
 
+            self.db.start()
             self.db.insert("training_operator_record", sql_value)
 
             values = {'remain_times': training_times, 'userid': userid, 'create_time': now, 'store_id': 0}
@@ -539,18 +588,25 @@ class TrainingOP:
             log.debug('register_presentation insert consumer db_ret=%d', db_ret)
             if db_ret != 1:
                 self.db.rollback()
-                return response.UAURET.ORDERERR, None
+                return response.UAURET.ORDERERR
+            if store_id != 0:
+                values = {'remain_times': 0, 'userid': userid, 'create_time': now, 'store_id': store_id}
+                ret = self.db.insert(table='consumer', values=values)
+                if ret != 1:
+                    self.db.rollback()
+                    return response.UAURET.ORDERERR
+
             self.db.commit()
-            return UYU_OP_OK, userid
+            return UYU_OP_OK
         except:
             log.warn(traceback.format_exc())
             self.db.rollback()
-            return response.UAURET.ORDERERR, None
+            return response.UAURET.ORDERERR
 
     # 公司赠送给用户
     @with_database('uyu_core')
-    def org_presentation_to_user(self):
-        userid = self.cdata["userid"]
+    def org_presentation_to_user_order(self):
+        userid = self.cdata["consumer_id"]
         training_times = self.cdata["training_times"]
         now = datetime.datetime.now()
         try:
