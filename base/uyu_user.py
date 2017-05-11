@@ -8,6 +8,7 @@ import traceback
 import string
 import hashlib
 import base64
+from uyubase.base.training_op import TrainingOP
 from uyubase.base.response import success, error, UAURET
 from uyubase.uyu import define
 from uyubase.uyu.define import UYU_OP_OK, UYU_OP_ERR, UYU_SYS_ROLE_STORE
@@ -166,6 +167,7 @@ class UUser:
         sql_value = self.__gen_vsql(self.ukey, udata)
         ret = self.db.select_one(table='auth_user', fields='*', where={'phone_num': mobile})
         if ret:
+            log.debug('internal_user_register phone_num=%s exists', mobile)
             return False, None
         password = udata['password']
         if len(password) == 128:
@@ -188,33 +190,36 @@ class UUser:
             sql_value = self.__gen_vsql(self.ukey, udata)
             ret = self.db.select_one(table='auth_user', fields='*', where={'phone_num': mobile})
             if ret:
+                log.debug('internal_user_register_with_consumer phone_num=%s exists', mobile)
                 return False, None
-            self.db.start()
             password = udata['password']
             if len(password) == 128:
                 sql_value["password"] = password
             else:
                 md5_password = hashlib.md5(password).hexdigest()
                 sql_value["password"] = gen_passwd(md5_password)
+
             #sql_value['login_name'] = mobile
             sql_value["login_name"] = udata.get('username', '')
             sql_value['phone_num'] = mobile
             sql_value["state"] = define.UYU_USER_STATE_OK
             sql_value["ctime"] = now
-            self.db.insert("auth_user", sql_value)
-            userid = self.db.last_insert_id()
-            consumer_value = {
-                'userid': userid,
-                'remain_times': define.UYU_FREE_TRAINING_TIMES,
-                'create_time': now,
-                'uptime_time': now,
-                'store_id': store_id,
-            }
-            self.db.insert(table='consumer', values=consumer_value)
-            self.db.commit()
+
+            # self.db.insert("auth_user", sql_value)
+            # userid = self.db.last_insert_id()
+
+            params = {}
+            params['training_times'] = define.UYU_FREE_TRAINING_TIMES
+            params['busicd'] = define.BUSICD_ORG_REGISTER_PRESENTATION
+
+            top = TrainingOP(params)
+            ret, userid = top.org_register_presentation_to_user(sql_value, store_id)
+            log.debug('org allocate times to mobile=%s, training_times=%d ret=%s', mobile, params['training_times'], ret)
+            if ret != UYU_OP_OK:
+                return False, None
             return True, userid
         except:
-            self.db.rollback()
+            log.warn(traceback.format_exc())
             return False, None
 
 

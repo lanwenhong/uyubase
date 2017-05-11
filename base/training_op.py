@@ -296,6 +296,12 @@ class TrainingOP:
             sql_value['seller'] = st_ret.get('store_name')
             sql_value['seller_id'] = st_ret.get('userid')
             sql_value['store_is_prepay'] = st_ret.get('is_prepayment')
+        elif busicd in (define.BUSICD_ORG_REGISTER_PRESENTATION, define.BUSICD_ORG_PRESENTATION):
+            at_ret = self.db.select_one(table='auth_user', fields='username', where={'id': consumer_id})
+            sql_value['buyer'] = at_ret.get('username')
+            sql_value['buyer_id'] = consumer_id
+            sql_value['seller'] = '公司'
+            sql_value['seller_id'] = 0
         else:
             pass
 
@@ -502,6 +508,82 @@ class TrainingOP:
             log.warn(traceback.format_exc())
             self.db.rollback()
             return UYU_OP_ERR
+
+    # 注册赠送
+    @with_database('uyu_core')
+    def org_register_presentation_to_user(self, user_value, store_id):
+        training_times = self.cdata["training_times"]
+        now = datetime.datetime.now()
+        try:
+            sql_value = self.__gen_vsql(UYU_ORDER_STATUS_SUCC)
+            sql_value["op_type"] = define.UYU_ORDER_TYPE_PRESENTATION
+            sql_value["op_name"] = '公司'
+            sql_value["op_id"] = 0
+
+            self.db.start()
+
+            ret = self.db.insert("auth_user", user_value)
+            log.debug('org register presentation insert user ret=%d', ret)
+            if ret != 1:
+                self.db.rollback()
+                return response.UAURET.ORDERERR, None
+            userid = self.db.last_insert_id()
+
+            self.__gen_buyer_seller(define.BUSICD_ORG_REGISTER_PRESENTATION, sql_value, consumer_id=userid)
+            log.debug("====sql_value: %s", sql_value)
+
+            self.db.insert("training_operator_record", sql_value)
+
+            values = {'remain_times': training_times, 'userid': userid, 'create_time': now, 'store_id': 0}
+            db_ret = self.db.insert(table='consumer', values=values)
+            log.debug('register_presentation insert consumer db_ret=%d', db_ret)
+            if db_ret != 1:
+                self.db.rollback()
+                return response.UAURET.ORDERERR, None
+            self.db.commit()
+            return UYU_OP_OK, userid
+        except:
+            log.warn(traceback.format_exc())
+            self.db.rollback()
+            return response.UAURET.ORDERERR, None
+
+    # 公司赠送给用户
+    @with_database('uyu_core')
+    def org_presentation_to_user(self):
+        userid = self.cdata["userid"]
+        training_times = self.cdata["training_times"]
+        now = datetime.datetime.now()
+        try:
+            sql_value = self.__gen_vsql(UYU_ORDER_STATUS_SUCC)
+            sql_value["op_type"] = define.UYU_ORDER_TYPE_PRESENTATION
+            sql_value["op_name"] = self.suser.get("username", "")
+            sql_value["op_id"] = self.suser.get("id", "")
+
+            self.__gen_buyer_seller(define.BUSICD_ORG_PRESENTATION, sql_value, consumer_id=userid)
+            log.debug("====sql_value: %s", sql_value)
+
+            self.db.start()
+            self.db.insert("training_operator_record", sql_value)
+            sql = "update consumer set remain_times=remain_times+%d, uptime_time='%s' where userid=%d and store_id=%d" % (training_times, now, userid, 0)
+            ret = self.db.execute(sql)
+            log.debug('register_presentation update consumer ret=%d', ret)
+            if ret == 0:
+                values = {'remain_times': training_times, 'userid': userid, 'create_time': now, 'store_id': 0}
+                db_ret = self.db.insert(table='consumer', values=values)
+                log.debug('register_presentation insert consumer db_ret=%d', db_ret)
+                if db_ret != 1:
+                    self.db.rollback()
+                    return response.UAURET.ORDERERR
+                self.db.commit()
+                return UYU_OP_OK
+            else:
+                self.db.commit()
+                return UYU_OP_OK
+        except:
+            log.warn(traceback.format_exc())
+            self.db.rollback()
+            return response.UAURET.ORDERERR
+
 
     def get_order_by_no(self, order_no):
         pass
