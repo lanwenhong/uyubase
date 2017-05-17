@@ -256,7 +256,9 @@ class UUser:
 
     @with_database('uyu_core')
     def load_user_by_login_name(self, login_name):
-        record = self.db.select_one("auth_user", {"login_name": login_name})
+        # record = self.db.select_one("auth_user", {"login_name": login_name})
+        sql = "select * from auth_user where login_name='%s' or nick_name='%s'" % (login_name, login_name)
+        record = self.db.get(sql)
         log.debug('#record: %s', record)
         if record:
             for key in self.ukey:
