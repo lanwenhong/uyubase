@@ -481,20 +481,20 @@ class TrainingOP:
                     self.db.rollback()
                     return UYU_OP_ERR
 
-            use_value = {
-                'channel_id': channel_id,
-                'store_id': store_id,
-                'consumer_id': userid,
-                'comsumer_nums': training_times,
-                'status': 0,
-                'ctime': now,
-                'utime': now,
-            }
+            # use_value = {
+            #     'channel_id': channel_id,
+            #     'store_id': store_id,
+            #     'consumer_id': userid,
+            #     'comsumer_nums': training_times,
+            #     'status': 0,
+            #     'ctime': now,
+            #     'utime': now,
+            # }
 
-            ret = self.db.insert(table='training_use_record', values=use_value)
-            if ret != 1:
-                self.db.rollback()
-                return UYU_OP_ERR
+            # ret = self.db.insert(table='training_use_record', values=use_value)
+            # if ret != 1:
+            #     self.db.rollback()
+            #     return UYU_OP_ERR
 
 
             self.db.commit()
