@@ -55,7 +55,6 @@ class SDevice:
         self.data = None
         self.se = session
 
-    #检查SESSION对应的USERID是否有权限获取用户数据
     def check_permission(self):
         #是否能获取SESSION
         v = self.se.get_session()
