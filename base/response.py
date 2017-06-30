@@ -8,41 +8,49 @@ except ImportError:
 
 
 class UAURET:
-    OK                  = "0000"
-    DBERR               = "2000"
-    THIRDERR            = "2001"
-    SESSIONERR          = "2002"
-    DATAERR             = "2003"
-    IOERR               = "2004"
-    LOGINERR            = "2100"
-    PARAMERR            = "2101"
-    USERERR             = "2102"
-    ROLEERR             = "2103"
-    PWDERR              = "2104"
-    USERNOTEXISTS       = "2105"
-    REQERR              = "2200"
-    IPERR               = "2201"
-    NODATA              = "2300"
-    DATAEXIST           = "2301"
-    PHONENUMEXIST       = "2302"
-    UNKOWNERR           = "2400"
-    SERVERERR           = "2600"
-    METHODERR           = "2601"
-    VCODEERR            = "1000"
-    REGISTERERR         = "1001"
-    CHANGECHANERR       = "1002"
-    CHANGESTOREERR      = "1003"
-    USERROLEERR         = "1004"
-    ORDERERR            = "1005"
-    BUSICEERR           = "1006"
-    BALANCEERR          = "1007"
-    STOREERR1           = "1008"
-    UNBINDEYEERR        = "1009"
-    STOREDEVICEERR      = "1010"
-    USERTIMESERR        = "1011"
-    ORGALLOCATEROLEERR  = "1012"
-    LOGINNAMEEXISTS     = "1013"
-    MODIFYUSERINFOERR   = "1014"
+    OK                    = "0000"
+    DBERR                 = "2000"
+    THIRDERR              = "2001"
+    SESSIONERR            = "2002"
+    DATAERR               = "2003"
+    IOERR                 = "2004"
+    LOGINERR              = "2100"
+    PARAMERR              = "2101"
+    USERERR               = "2102"
+    ROLEERR               = "2103"
+    PWDERR                = "2104"
+    USERNOTEXISTS         = "2105"
+    REQERR                = "2200"
+    IPERR                 = "2201"
+    NODATA                = "2300"
+    DATAEXIST             = "2301"
+    PHONENUMEXIST         = "2302"
+    UNKOWNERR             = "2400"
+    SERVERERR             = "2600"
+    METHODERR             = "2601"
+    VCODEERR              = "1000"
+    REGISTERERR           = "1001"
+    CHANGECHANERR         = "1002"
+    CHANGESTOREERR        = "1003"
+    USERROLEERR           = "1004"
+    ORDERERR              = "1005"
+    BUSICEERR             = "1006"
+    BALANCEERR            = "1007"
+    STOREERR1             = "1008"
+    UNBINDEYEERR          = "1009"
+    STOREDEVICEERR        = "1010"
+    USERTIMESERR          = "1011"
+    ORGALLOCATEROLEERR    = "1012"
+    LOGINNAMEEXISTS       = "1013"
+    MODIFYUSERINFOERR     = "1014"
+    DEVICEUNBINDERR       = "1015"
+    SUBTIMESERR           = "1016"
+    CREATEITEMERR         = "2700"
+    UPDATEITEMERR         = "2701"
+    CREATEPRESCRIPTIONERR = "2702"
+    UPDATEPRESCRIPTIONERR = "2703"
+    USERNOPRESCERR        = "2704"
+    PRESCADDITEMERR       = "2705"
 
 
 
@@ -82,6 +90,14 @@ error_map = {
     UAURET.ORGALLOCATEROLEERR    : u"平台只能分配给消费者或视光师",
     UAURET.LOGINNAMEEXISTS       : u"登录名已存在",
     UAURET.MODIFYUSERINFOERR     : u"修改用户信息失败",
+    UAURET.DEVICEUNBINDERR       : u"设备未绑定",
+    UAURET.SUBTIMESERR           : u"减扣次数失败",
+    UAURET.CREATEITEMERR         : u"创建项目失败",
+    UAURET.UPDATEITEMERR         : u"修改项目失败",
+    UAURET.CREATEPRESCRIPTIONERR : u"创建处方失败",
+    UAURET.UPDATEPRESCRIPTIONERR : u"修改处方失败",
+    UAURET.USERNOPRESCERR        : u"用户没有处方",
+    UAURET.PRESCADDITEMERR       : u"处方添加项目失败",
 }
 
 def json_default_trans(obj):

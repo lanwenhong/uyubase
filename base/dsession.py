@@ -48,10 +48,9 @@ class DSession:
 
 
 class SDevice:
-    def __init__(self, device_addr, session):
-        #session 检查， SESSION中的device_addr和传上来的device_addr是否一致
+    def __init__(self, session):
+        #session 检查
         self.sauth = False
-        self.device_addr = device_addr
         self.data = None
         self.se = session
 
@@ -62,12 +61,7 @@ class SDevice:
             return False
 
         log.debug("get session: %s", v)
-        log.debug("input device_addr: %s", self.device_addr)
         log.debug("session device_addr: %s", v["device_addr"])
-
-        log.debug("self.device_addr: %s sssion device_addr: %s", self.device_addr, v.get("device_addr"))
-        if self.device_addr != v.get("device_addr"):
-            return False
 
         self.load_device()
         if self.data["status"] != define.UYU_DEVICE_ENABLE:
@@ -80,7 +74,9 @@ class SDevice:
 
     @dbpool.with_database('uyu_core')
     def load_device(self):
-        sql = "select * from device where blooth_tag=%s" % self.device_addr
+        v = self.se.get_session()
+        device_addr = v["device_addr"]
+        sql = "select * from device where blooth_tag='%s'" % device_addr
         ret = self.db.get(sql)
         self.data = ret
 
@@ -89,13 +85,13 @@ def uyu_check_device_session(redis_pool, cookie_conf):
     def f(func):
         def _(self, *args, **kwargs):
             try:
-                sk = self.get_cookie("sessionid")
+                sk = self.get_cookie("token")
                 log.debug("sk: %s", sk)
                 self.session = DSession(redis_pool, cookie_conf, sk)
 
-                params = self.req.input()
-                device_addr = params.get("se_device_addr", -1)
-                self.device = SDevice(device_addr, self.session)
+                # params = self.req.input()
+                # device_addr = params.get("device_addr", None)
+                self.device = SDevice(self.session)
                 self.device.check_permission()
 
                 x = func(self, *args, **kwargs)
@@ -119,7 +115,7 @@ def uyu_set_device_cookie(redis_pool, cookie_conf):
                 v = json.loads(x)
                 if v["respcd"] == UAURET.OK:
                     self.session.set_session(v["data"])
-                    self.set_cookie("sessionid", self.session.sk, **cookie_conf)
+                    self.set_cookie("token", self.session.sk, **cookie_conf)
                 return x
             except:
                 log.warn(traceback.format_exc())

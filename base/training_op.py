@@ -704,17 +704,15 @@ class ConsumerTimesChange:
         try:
             consumer_id = data.get('userid')
             store_id = data.get('store_id')
-
             training_times = data.get('training_times')
             eyesight_id = data.get('eyesight_id', None)
             device_id = data.get('device_id', None)
-
-
+            train_id = data.get('train_id', None)
             sql = "select channel_id from stores where id=%d" % store_id
             dbret = self.db.get(sql)
             if not dbret:
                 # return UYU_OP_ERR
-                return response.UAURET.ORDERERR
+                return response.UAURET.ORDERERR, None
 
             channel_id = dbret.get('channel_id')
 
@@ -737,6 +735,8 @@ class ConsumerTimesChange:
                 value['eyesight_id'] = eyesight_id
             if device_id:
                 value['device_id'] = device_id
+            if train_id:
+                value['train_id'] = train_id
             # ret = self.db.insert(table='training_use_record', values=value)
 
             self.db.start()
@@ -747,35 +747,37 @@ class ConsumerTimesChange:
                 ret = self.db.execute(sql)
                 if ret == 0:
                     self.db.rollback()
-                    return response.UAURET.USERTIMESERR
+                    return response.UAURET.USERTIMESERR, None
                 else:
                     value.update({'store_id': store_id})
                     ret = self.db.insert(table='training_use_record', values=value)
+                    record_id = self.db.last_insert_id()
                     if ret == 1:
                         self.db.commit()
-                        return UYU_OP_OK
+                        return UYU_OP_OK, record_id
                     else:
                         self.db.rollback()
                         # return UYU_OP_ERR
-                        return response.UAURET.ORDERERR
+                        return response.UAURET.ORDERERR, None
 
             else:
                 # value.update({'store_id': 0})
                 # 记录到哪个门店减扣次数的
                 value.update({'store_id': store_id})
                 ret = self.db.insert(table='training_use_record', values=value)
+                record_id = self.db.last_insert_id()
                 if ret == 1:
                     self.db.commit()
-                    return UYU_OP_OK
+                    return UYU_OP_OK, record_id
                 else:
                     self.db.rollback()
                     # return UYU_OP_ERR
-                    return response.UAURET.ORDERERR
+                    return response.UAURET.ORDERERR, None
         except:
             self.db.rollback()
             log.warn(traceback.format_exc())
             # return UYU_OP_ERR
-            return response.UAURET.ORDERERR
+            return response.UAURET.ORDERERR, None
 
 
 class OrgAllocateToUser:
