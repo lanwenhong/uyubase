@@ -85,7 +85,9 @@ def uyu_check_device_session(redis_pool, cookie_conf):
     def f(func):
         def _(self, *args, **kwargs):
             try:
-                sk = self.get_cookie("token")
+                params = self.req.input()
+                # sk = self.get_cookie("token")
+                sk = params.get('token')
                 log.debug("sk: %s", sk)
                 self.session = DSession(redis_pool, cookie_conf, sk)
 
@@ -107,10 +109,11 @@ def uyu_set_device_cookie(redis_pool, cookie_conf):
     def f(func):
         def _(self, *args, **kwargs):
             try:
-                x = func(self, *args, **kwargs)
                 #创建SESSION
                 self.session = DSession(redis_pool, cookie_conf)
                 self.session.gen_skey()
+                x = func(self, *args, **kwargs)
+                log.debug("========token: %s", self.session.sk)
 
                 v = json.loads(x)
                 if v["respcd"] == UAURET.OK:
