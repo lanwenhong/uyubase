@@ -51,6 +51,7 @@ class UAURET:
     UPDATEPRESCRIPTIONERR = "2703"
     USERNOPRESCERR        = "2704"
     PRESCADDITEMERR       = "2705"
+    UPDATETRAININFOERR    = "2706"
 
 
 
@@ -98,6 +99,7 @@ error_map = {
     UAURET.UPDATEPRESCRIPTIONERR : u"修改处方失败",
     UAURET.USERNOPRESCERR        : u"用户没有处方",
     UAURET.PRESCADDITEMERR       : u"处方添加项目失败",
+    UAURET.UPDATETRAININFOERR    : u"更新训练信息失败",
 }
 
 def json_default_trans(obj):
