@@ -43,6 +43,8 @@ class UAURET:
     ORGALLOCATEROLEERR  = "1012"
     LOGINNAMEEXISTS     = "1013"
     MODIFYUSERINFOERR   = "1014"
+    PUSHDEVERR          = "1015"
+    PUSHCONNERR         = "1016"
 
 
 
@@ -82,6 +84,8 @@ error_map = {
     UAURET.ORGALLOCATEROLEERR    : u"平台只能分配给消费者或视光师",
     UAURET.LOGINNAMEEXISTS       : u"登录名已存在",
     UAURET.MODIFYUSERINFOERR     : u"修改用户信息失败",
+    UAURET.PUSHDEVERR                   : u"推送设备错误",
+    UAURET.PUSHCONNERR                  : u"每台设备只允许一个连接",
 }
 
 def json_default_trans(obj):
