@@ -114,8 +114,8 @@ def uyu_set_device_cookie(redis_pool, cookie_conf):
                 self.session.gen_skey()
                 x = func(self, *args, **kwargs)
                 log.debug("========token: %s", self.session.sk)
-
                 v = json.loads(x)
+                log.debug("========v data: %s", v["data"])
                 if v["respcd"] == UAURET.OK:
                     self.session.set_session(v["data"])
                     self.set_cookie("token", self.session.sk, **cookie_conf)

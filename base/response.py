@@ -8,7 +8,6 @@ except ImportError:
 
 
 class UAURET:
-<<<<<<< HEAD
     OK                    = "0000"
     DBERR                 = "2000"
     THIRDERR              = "2001"
@@ -55,6 +54,7 @@ class UAURET:
     USERNOPRESCERR        = "2704"
     PRESCADDITEMERR       = "2705"
     UPDATETRAININFOERR    = "2706"
+    GENPICFILEERR         = "2707"
 
 error_map = {
     UAURET.OK                    : u"成功",
@@ -103,6 +103,7 @@ error_map = {
     UAURET.UPDATETRAININFOERR    : u"更新训练信息失败",
     UAURET.PUSHDEVERR            : u"推送设备错误",
     UAURET.PUSHCONNERR           : u"每台设备只允许一个连接",
+    UAURET.GENPICFILEERR         : u"生成二维码文件失败",
 }
 
 def json_default_trans(obj):
