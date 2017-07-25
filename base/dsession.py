@@ -46,6 +46,21 @@ class DSession:
         client = redis.StrictRedis(connection_pool=self.redis_pool)
         client.delete(self.sk)
 
+    def set_device_token(self, device_id, value):
+        client = redis.StrictRedis(connection_pool=self.redis_pool)
+        device_prefix_key = 'uyu_device_%s' % device_id
+        client.set(device_prefix_key, value)
+        client.expire(device_prefix_key, self.c_conf["expires"])
+
+    def get_device_token(self, device_id):
+        client = redis.StrictRedis(connection_pool=self.redis_pool)
+        device_prefix_key = 'uyu_device_%s' % device_id
+        v = client.get(device_prefix_key)
+        if not v:
+            return None
+        return v
+
+
 
 class SDevice:
     def __init__(self, session):
@@ -118,6 +133,7 @@ def uyu_set_device_cookie(redis_pool, cookie_conf):
                 log.debug("========v data: %s", v["data"])
                 if v["respcd"] == UAURET.OK:
                     self.session.set_session(v["data"])
+                    self.session.set_device_token(v["data"]["id"], self.session.sk)
                     self.set_cookie("token", self.session.sk, **cookie_conf)
                 return x
             except:
