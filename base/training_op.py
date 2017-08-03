@@ -34,9 +34,9 @@ class StoreToConsumerCancel:
 
             db_day = ctime.strftime("%Y-%m-%d")
             n_day = datetime.datetime.now().strftime("%Y-%m-%d")
-            if db_day != n_day:
-                 self.db.rollback()
-                 return UYU_OP_ERR
+            # if db_day != n_day:
+            #      self.db.rollback()
+            #      return UYU_OP_ERR
 
             uptime = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             sql = "update training_operator_record set status=%d, uptime_time='%s' where orderno='%s' and status=%d" % (define.UYU_ORDER_STATUS_CANCEL,
@@ -88,9 +88,9 @@ class OrgAllotToChanCancel:
 
             db_day = ctime.strftime("%Y-%m-%d")
             n_day = datetime.datetime.now().strftime("%Y-%m-%d")
-            if db_day != n_day:
-                 self.db.rollback()
-                 return UYU_OP_ERR
+            # if db_day != n_day:
+            #      self.db.rollback()
+            #      return UYU_OP_ERR
 
             uptime = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             sql = "update training_operator_record set status=%d, uptime_time='%s'  where orderno='%s' and status=%d" % (define.UYU_ORDER_STATUS_CANCEL,
@@ -135,9 +135,9 @@ class ChanAllotStoreCancel:
 
             db_day = ctime.strftime("%Y-%m-%d")
             n_day = datetime.datetime.now().strftime("%Y-%m-%d")
-            if db_day != n_day:
-                 self.db.rollback()
-                 return UYU_OP_ERR
+            # if db_day != n_day:
+            #      self.db.rollback()
+            #      return UYU_OP_ERR
 
             uptime = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             sql = "update training_operator_record set status=%d, uptime_time='%s' where orderno='%s' and status=%d" % (define.UYU_ORDER_STATUS_CANCEL,
@@ -191,9 +191,9 @@ class OrgAllotToUserCancel:
 
             db_day = ctime.strftime("%Y-%m-%d")
             n_day = datetime.datetime.now().strftime("%Y-%m-%d")
-            if db_day != n_day:
-                 self.db.rollback()
-                 return UYU_OP_ERR
+            # if db_day != n_day:
+            #      self.db.rollback()
+            #      return UYU_OP_ERR
 
             uptime = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             sql = "update training_operator_record set status=%d, uptime_time='%s' where orderno='%s' and status=%d" % (define.UYU_ORDER_STATUS_CANCEL,
