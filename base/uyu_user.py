@@ -287,6 +287,16 @@ class UUser:
             sql_value["user_type"] = role
             return sql_value
 
+    def __gen_base_user_sql_new(self, role, udata):
+            sql_value = self.__gen_vsql(self.ukey, udata)
+            sql_value["ctime"] = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            password = udata['password']
+            md5_password = hashlib.md5(password).hexdigest()
+            sql_value["password"] = gen_passwd(md5_password)
+            sql_value["state"] = define.UYU_USER_STATE_OK
+            sql_value["user_type"] = role
+            return sql_value
+
     def __gen_profile_sql(self, userid, pdata):
             sql_value = self.__gen_vsql(self.pkey, pdata)
             sql_value["userid"] = userid
@@ -376,6 +386,36 @@ class UUser:
         except:
             self.db.rollback()
             raise
+
+
+    #创建门店信息(新)
+    @with_database('uyu_core')
+    def create_store_transaction_new(self, udata, pdata, sdata):
+        try:
+            self.db.start()
+            #创建用户基本信息
+            sql_value = self.__gen_base_user_sql_new(define.UYU_USER_ROLE_STORE, udata)
+            self.db.insert("auth_user", sql_value)
+            userid = self.db.last_insert_id()
+
+            #创建渠道档案
+            sql_value = self.__gen_profile_sql(userid, pdata)
+            self.db.insert("profile", sql_value)
+
+            #创门店相关信息
+            sql_value = self.__gen_store_sql(userid, sdata)
+            self.db.insert("stores", sql_value)
+            store_id = self.db.last_insert_id()
+
+            self.db.commit()
+            self.userid = userid
+            self.store_id = store_id
+            self.chnid = sdata["channel_id"]
+
+        except:
+            self.db.rollback()
+            raise
+
 
     #设置渠道状态， 打开/关闭
     @with_database('uyu_core')
