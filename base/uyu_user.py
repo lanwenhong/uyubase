@@ -257,13 +257,16 @@ class UUser:
     @with_database('uyu_core')
     def load_user_by_login_or_nick_name(self, login_name):
         sql = "select * from auth_user where login_name='%s' or nick_name='%s'" % (login_name, login_name)
-        record = self.db.get(sql)
-        log.debug('#record: %s', record)
-        if record:
-            for key in self.ukey:
-                if record.get(key, None) not in ['', None]:
-                    self.udata[key] = record[key]
-            self.udata["userid"] = record["id"]
+        # record = self.db.get(sql)
+        # log.debug('#record: %s', record)
+        # if record:
+        #     for key in self.ukey:
+        #         if record.get(key, None) not in ['', None]:
+        #             self.udata[key] = record[key]
+        #     self.udata["userid"] = record["id"]
+        record = self.db.query(sql)
+        log.debug('func=%s|record: %s|len=%d', 'load_user_by_login_or_nick_name', record, len(record))
+        return record
 
 
     @with_database('uyu_core')
